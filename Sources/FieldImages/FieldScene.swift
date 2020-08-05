@@ -110,7 +110,7 @@ public class FieldScene {
     public init(field: Field, perspective: Perspective) {
         scnView.backgroundColor = .black
         // Field
-        guard let fieldNode = SCNScene(named: self.bundle + "/field.scnassets/field.scn")?.rootNode.childNode(withName: "field", recursively: true) else {
+        guard let fieldNode = SCNScene(named: "field.scn", inDirectory: self.bundle + "/field.scnassets")?.rootNode.childNode(withName: "field", recursively: true) else {
             fatalError("Unable to get field node.")
         }
         scene.rootNode.addChildNode(fieldNode)
