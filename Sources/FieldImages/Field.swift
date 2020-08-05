@@ -63,22 +63,30 @@ import Foundation
 import SceneKit
 import AppKit
 
+public enum CameraPerspective: Equatable {
+    
+    case none
+    case playerTop
+    case playerBottom
+    
+}
+
 public struct Field {
     
     public var player: ManageableNaoV5
     
-    public var teamMates: [FieldCoordinate]
+    public var teamMates: [ManageableNaoV5]
     
-    public var opponents: [FieldCoordinate]
+    public var opponents: [ManageableNaoV5]
     
-    public init(player: ManageableNaoV5, teamMates: [FieldCoordinate] = [], opponents: [FieldCoordinate] = []) {
+    public init(player: ManageableNaoV5, teamMates: [ManageableNaoV5] = [], opponents: [ManageableNaoV5] = []) {
         self.player = player
         self.teamMates = teamMates
         self.opponents = opponents
     }
     
     @available(macOS 10.12, *)
-    var image: NSImage {
+    public func image(perspective: CameraPerspective = .none) -> NSImage {
         // retrieve the SCNView
         let scnView = SCNView(
             frame: NSRect(x: 0, y: 0, width: 640, height: 480),
@@ -86,7 +94,7 @@ public struct Field {
         )
         scnView.backgroundColor = .black
         // set the scene to the view
-        scnView.scene = self.scene
+        scnView.scene = self.scene(perspective: perspective)
         return scnView.snapshot()
     }
     
@@ -99,36 +107,62 @@ public struct Field {
     
     private let bundle = "FieldImages_FieldImages.bundle"
     
-    private var camera: SCNCamera {
+    private func camera(perspective: CameraPerspective) -> SCNCamera {
         guard nil != self.player.fieldPosition else {
             return SCNCamera()
         }
-        let bottomCamera = self.player.topCamera
+        let naoCamera: Camera
+        switch perspective {
+        case .playerTop:
+            naoCamera = self.player.topCamera
+        case .playerBottom:
+            naoCamera = self.player.bottomCamera
+        case .none:
+            return SCNCamera()
+        }
         let camera = SCNCamera()
-        camera.xFov = Double(bottomCamera.hFov.degrees_d)
-        camera.yFov = Double(bottomCamera.vFov.degrees_d)
+        camera.xFov = Double(naoCamera.hFov.degrees_d)
+        camera.yFov = Double(naoCamera.vFov.degrees_d)
         camera.zNear = 0.3
         return camera
     }
     
-    private var cameraNode: SCNNode {
+    private func cameraNode(perspective: CameraPerspective) -> SCNNode {
         let node = SCNNode()
-        guard let fieldPosition = self.player.fieldPosition else {
+        func noPerspective() -> SCNNode {
             node.position = SCNVector3(x: 0, y: 8, z: 0)
             node.eulerAngles.x = CGFloat.pi / -2.0
-            node.camera = self.camera
+            node.camera = self.camera(perspective: perspective)
             return node
         }
-        let cameraPivot = self.player.topCameraPivot
-        let bottomCamera = self.player.topCamera
+        let naoPath: KeyPath<Self, ManageableNaoV5>
+        let naoCameraPivotPath: KeyPath<Self, CameraPivot>
+        let naoCameraPath: KeyPath<Self, Camera>
+        switch perspective {
+        case .playerTop:
+            naoPath = \.player
+            naoCameraPivotPath = \.player.topCameraPivot
+            naoCameraPath = \.player.topCamera
+        case .playerBottom:
+            naoPath = \.player
+            naoCameraPivotPath = \.player.bottomCameraPivot
+            naoCameraPath = \.player.bottomCamera
+        case .none:
+            return noPerspective()
+        }
+        guard let fieldPosition = self[keyPath: naoPath].fieldPosition else {
+            return noPerspective()
+        }
+        let cameraPivot = self[keyPath: naoCameraPivotPath]
+        let naoCamera = self[keyPath: naoCameraPath]
         node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
-        node.position.x = CGFloat(Metres_d(fieldPosition.position.y)) - 0.4
-        node.position.y = CGFloat(cameraPivot.height.metres_d + bottomCamera.height.metres_d)
+        node.position.x = CGFloat(Metres_d(fieldPosition.position.y))
+        node.position.y = CGFloat(cameraPivot.height.metres_d + naoCamera.height.metres_d)
         let yaw = fieldPosition.heading.radians_d + cameraPivot.yaw.radians_d
-        let pitch = cameraPivot.pitch.radians_d + bottomCamera.vDirection.radians_d
+        let pitch = cameraPivot.pitch.radians_d + naoCamera.vDirection.radians_d
         node.eulerAngles.z = CGFloat(-pitch)
         node.eulerAngles.y = CGFloat(yaw) + CGFloat.pi
-        node.camera = self.camera
+        node.camera = self.camera(perspective: perspective)
         return node
     }
     
@@ -178,7 +212,7 @@ public struct Field {
         return nao
     }
     
-    private var scene: SCNScene {
+    private func scene(perspective: CameraPerspective) -> SCNScene {
         // create a new scene
         let scene = SCNScene()
         scene.rootNode.addChildNode(self.field)
@@ -191,7 +225,7 @@ public struct Field {
             scene.rootNode.addChildNode(self.playerNao)
         }
         // Add camera to the scene
-        scene.rootNode.addChildNode(self.cameraNode)
+        scene.rootNode.addChildNode(self.cameraNode(perspective: perspective))
         return scene
     }
     

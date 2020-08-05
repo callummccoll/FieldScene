@@ -82,7 +82,7 @@ func fork(_ process: Process) {
 let field = Field(
     player: ManageableNaoV5.standing(
         head: NaoHead(
-            neck: PitchYawJoint(pitch: .degrees(5), yaw: .zero)
+            neck: PitchYawJoint(pitch: .zero, yaw: .zero)
         ),
         fieldPosition: FieldCoordinate(
             position: CartesianCoordinate(x: 0, y: -80),
@@ -90,7 +90,7 @@ let field = Field(
         )
     )
 )
-let image = field.image
+let image = field.image(perspective: .playerBottom)
 let data = image.tiffRepresentation(using: .jpeg, factor: 1.0)
 let path = FileManager.default.currentDirectoryPath
 let filename = "image.jpg"
