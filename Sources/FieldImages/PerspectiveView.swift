@@ -82,7 +82,7 @@ public struct PerspectiveView: NSViewControllerRepresentable {
         viewController.field = self.field
         viewController.perspective = self.perspective
         viewController.lightIntensity = self.lightIntensity
-        viewController.sync()
+        viewController.update()
     }
     
 }

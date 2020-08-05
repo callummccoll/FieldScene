@@ -158,7 +158,7 @@ public class PerspectiveViewController: NSViewController {
         self.view = scnView
     }
     
-    public func sync() {
+    public func update() {
         self.syncRobotNodes()
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: self.perspective)
     }
