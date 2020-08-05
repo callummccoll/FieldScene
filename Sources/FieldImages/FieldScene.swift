@@ -94,8 +94,13 @@ public class FieldScene {
     public var lightNodes: [SCNNode] = []
     
     private lazy var bundle: String = {
+        let packageBundleName = "FieldImages_FieldImages"
+        let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true)
+        if FileManager.default.fileExists(atPath: expectedBundle.path) {
+            return expectedBundle.path
+        }
         guard let bundle = Bundle.allBundles.first(where : {
-            $0.bundlePath.contains("FieldImages")
+            $0.bundlePath.contains(packageBundleName)
         }) else {
             fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath }), mainBundle: \(Bundle.main.bundlePath)")
         }
