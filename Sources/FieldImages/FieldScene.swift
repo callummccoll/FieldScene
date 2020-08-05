@@ -97,7 +97,7 @@ public class FieldScene {
         guard let bundle = Bundle.allBundles.first(where : {
             $0.bundlePath.contains("FieldImages")
         }) else {
-            fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath })")
+            fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath }), mainBundle: \(Bundle.main.bundlePath)")
         }
         return bundle.bundlePath
     }()
