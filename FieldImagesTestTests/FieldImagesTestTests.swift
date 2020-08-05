@@ -1,8 +1,9 @@
+//
 /*
- * Field.swift
- * 
+ * FieldImagesTestTests.swift
+ * FieldImagesTestTests
  *
- * Created by Callum McColl on 4/8/20.
+ * Created by Callum McColl on 6/8/20.
  * Copyright © 2020 Callum McColl. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,23 +57,29 @@
  *
  */
 
-import GUUnits
-import GUCoordinates
-import Nao
-import Foundation
-import SceneKit
-import AppKit
+import XCTest
+@testable import FieldImagesTest
 
-public struct Field {
-    
-    public var homeRobots: [ManageableNaoV5]
-    
-    public var awayRobots: [ManageableNaoV5]
-    
-    public init(homeRobots: [ManageableNaoV5] = [], awayRobots: [ManageableNaoV5] = []) {
-        self.homeRobots = homeRobots
-        self.awayRobots = awayRobots
+class FieldImagesTestTests: XCTestCase {
+
+    override func setUpWithError() throws {
+        // Put setup code here. This method is called before the invocation of each test method in the class.
     }
 
-    
+    override func tearDownWithError() throws {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    }
+
+    func testExample() throws {
+        // This is an example of a functional test case.
+        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    }
+
+    func testPerformanceExample() throws {
+        // This is an example of a performance test case.
+        self.measure {
+            // Put the code you want to measure the time of here.
+        }
+    }
+
 }

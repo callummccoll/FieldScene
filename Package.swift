@@ -9,8 +9,12 @@ let package = Package(
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .executable(
+            name: "FieldImagesTest",
+            targets: ["FieldImagesTest"]
+            ),
+        .library(
             name: "FieldImages",
-            targets: ["FieldImages"]),
+            targets: ["FieldImages"])
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -24,8 +28,16 @@ let package = Package(
             dependencies: [.product(name: "Nao", package: "GURobots")],
             resources: [.copy("field.scnassets"), .copy("nao.scnassets")]
         ),
+        .target(
+            name: "FieldImagesTest",
+            dependencies: ["FieldImages"],
+            resources: [
+                .process("FieldImagesTest.entitlements")
+            ]
+        ),
         .testTarget(
             name: "FieldImagesTests",
-            dependencies: ["FieldImages"]),
+            dependencies: ["FieldImages"]
+        )
     ]
 )

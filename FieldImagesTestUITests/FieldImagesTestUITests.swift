@@ -1,8 +1,9 @@
+//
 /*
- * main.swift
- * FieldImages
+ * FieldImagesTestUITests.swift
+ * FieldImagesTestUITests
  *
- * Created by Callum McColl on 5/8/20.
+ * Created by Callum McColl on 6/8/20.
  * Copyright © 2020 Callum McColl. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,52 +57,38 @@
  *
  */
 
-import Foundation
-import GUCoordinates
-import Nao
+import XCTest
 
-func fork(_ process: Process) {
-    if #available(macOS 10.12, *) {
-        let signals = [SIGINT, SIGQUIT, SIGTSTP, SIGKILL]
-        let sources = signals.map { signal in return DispatchSource.makeSignalSource(signal: signal) }
-        sources.forEach {
-            $0.setEventHandler {
-                process.terminate()
+class FieldImagesTestUITests: XCTestCase {
+
+    override func setUpWithError() throws {
+        // Put setup code here. This method is called before the invocation of each test method in the class.
+
+        // In UI tests it is usually best to stop immediately when a failure occurs.
+        continueAfterFailure = false
+
+        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+    }
+
+    override func tearDownWithError() throws {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    }
+
+    func testExample() throws {
+        // UI tests must launch the application that they test.
+        let app = XCUIApplication()
+        app.launch()
+
+        // Use recording to get started writing UI tests.
+        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    }
+
+    func testLaunchPerformance() throws {
+        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, *) {
+            // This measures how long it takes to launch your application.
+            measure(metrics: [XCTApplicationLaunchMetric()]) {
+                XCUIApplication().launch()
             }
-            $0.activate()
         }
-        process.launch()
-        process.waitUntilExit()
-        sources.forEach { $0.cancel() }
-    } else {
-        process.launch()
-        process.waitUntilExit()
     }
 }
-
-let field = Field(
-    player: ManageableNaoV5.standing(
-        head: NaoHead(
-            neck: PitchYawJoint(pitch: .zero, yaw: .zero)
-        ),
-        fieldPosition: FieldCoordinate(
-            position: CartesianCoordinate(x: 0, y: -80),
-            heading: .degrees(90)
-        )
-    )
-)
-let image = field.image(perspective: .playerBottom)
-let data = image.tiffRepresentation(using: .jpeg, factor: 1.0)
-let path = FileManager.default.currentDirectoryPath
-let filename = "image.jpg"
-do {
-    try data?.write(to: URL(fileURLWithPath: path + "/" + filename, isDirectory: false))
-} catch let e {
-    fatalError("\(e)")
-}
-
-let p = Process()
-p.currentDirectoryPath = path
-p.launchPath = "/usr/bin/env"
-p.arguments = ["open", filename]
-fork(p)

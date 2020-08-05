@@ -1,8 +1,9 @@
+//
 /*
- * Field.swift
- * 
+ * ContentView.swift
+ * FieldImagesTest
  *
- * Created by Callum McColl on 4/8/20.
+ * Created by Callum McColl on 6/8/20.
  * Copyright © 2020 Callum McColl. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,23 +57,17 @@
  *
  */
 
-import GUUnits
-import GUCoordinates
-import Nao
-import Foundation
-import SceneKit
-import AppKit
+import FieldImages
+import SwiftUI
 
-public struct Field {
-    
-    public var homeRobots: [ManageableNaoV5]
-    
-    public var awayRobots: [ManageableNaoV5]
-    
-    public init(homeRobots: [ManageableNaoV5] = [], awayRobots: [ManageableNaoV5] = []) {
-        self.homeRobots = homeRobots
-        self.awayRobots = awayRobots
+struct ContentView: View {
+    var body: some View {
+        PerspectiveView()
     }
+}
 
-    
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
 }
