@@ -97,7 +97,7 @@ public class FieldScene {
         let packageBundleName = "FieldImages_FieldImages"
         let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).path
         if FileManager.default.fileExists(atPath: expectedBundle) {
-            return expectedBundle
+            return packageBundleName + ".bundle/Contents/Resources"
         }
         guard let bundle = Bundle.allBundles.first(where : {
             $0.bundlePath.contains(packageBundleName)
