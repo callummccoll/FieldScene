@@ -1,8 +1,8 @@
 /*
- * Field.swift
- * 
+ * main.swift
+ * FieldImages
  *
- * Created by Callum McColl on 4/8/20.
+ * Created by Callum McColl on 5/8/20.
  * Copyright © 2020 Callum McColl. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,69 +56,41 @@
  *
  */
 
-import GUCoordinates
-import Nao
 import Foundation
-import SceneKit
-import AppKit
+import Nao
 
-public struct Field {
-    
-    public var player: ManageableNaoV5
-    
-    public var teamMates: [FieldCoordinate]
-    
-    public var opponents: [FieldCoordinate]
-    
-    public init(player: ManageableNaoV5, teamMates: [FieldCoordinate] = [], opponents: [FieldCoordinate] = []) {
-        self.player = player
-        self.teamMates = teamMates
-        self.opponents = opponents
+func fork(_ process: Process) {
+    if #available(macOS 10.12, *) {
+        let signals = [SIGINT, SIGQUIT, SIGTSTP, SIGKILL]
+        let sources = signals.map { signal in return DispatchSource.makeSignalSource(signal: signal) }
+        sources.forEach {
+            $0.setEventHandler {
+                process.terminate()
+            }
+            $0.activate()
+        }
+        process.launch()
+        process.waitUntilExit()
+        sources.forEach { $0.cancel() }
+    } else {
+        process.launch()
+        process.waitUntilExit()
     }
-    
-    var image: NSImage {
-        let bundle = "FieldImages_FieldImages.bundle"
-        // create a new scene
-        let field = SCNScene(named: bundle + "/field.scnassets/field.scn")!.rootNode.childNode(withName: "field", recursively: true)!
-        let homeGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
-        homeGoal.position.x = -4.55
-        homeGoal.position.y = 0.001
-        homeGoal.rotation.y = 1.0
-        homeGoal.rotation.w = CGFloat(Double.pi)
-        let awayGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
-        awayGoal.position.x = 4.55
-        awayGoal.position.y = 0.001
-        let scene = SCNScene()
-        scene.rootNode.addChildNode(field)
-        scene.rootNode.addChildNode(homeGoal)
-        scene.rootNode.addChildNode(awayGoal)
-        
-        // create and add a camera to the scene
-        let cameraNode = SCNNode()
-        cameraNode.camera = SCNCamera()
-        scene.rootNode.addChildNode(cameraNode)
-        
-        cameraNode.position = SCNVector3(x: 0, y: 8, z: 0)
-        cameraNode.rotation.x = 1.0
-        cameraNode.rotation.w = CGFloat.pi / -2.0
-        
-        // retrieve the SCNView
-        let scnView = SCNView(frame: NSRect(x: 0, y: 0, width: 640, height: 480))
-        
-        scnView.backgroundColor = .black
-        
-        // set the scene to the view
-        scnView.scene = scene
-        
-        // allows the user to manipulate the camera
-        scnView.allowsCameraControl = true
-        
-        // show statistics such as fps and timing information
-        scnView.showsStatistics = true
-        
-        // configure the view
-        scnView.backgroundColor = NSColor.black
-        return scnView.snapshot()
-    }
-    
 }
+
+let field = Field(player: ManageableNaoV5())
+let image = field.image
+let data = image.tiffRepresentation(using: .jpeg, factor: 1.0)
+let path = FileManager.default.currentDirectoryPath
+let filename = "image.jpg"
+do {
+    try data?.write(to: URL(fileURLWithPath: path + "/" + filename, isDirectory: false))
+} catch let e {
+    fatalError("\(e)")
+}
+
+let p = Process()
+p.currentDirectoryPath = path
+p.launchPath = "/usr/bin/env"
+p.arguments = ["open", filename]
+fork(p)
