@@ -1,6 +1,5 @@
-//
 /*
- * PerspectiveViewController.swift
+ * FieldScene.swift
  * FieldImages
  *
  * Created by Callum McColl on 6/8/20.
@@ -57,13 +56,13 @@
  *
  */
 
-import Cocoa
 import SceneKit
 
+import GUUnits
 import GUCoordinates
 import Nao
 
-public class PerspectiveViewController: NSViewController {
+public class FieldScene {
     
     public enum CameraPerspective: Equatable {
         
@@ -80,43 +79,42 @@ public class PerspectiveViewController: NSViewController {
         
     }
     
-    public var perspective: Perspective = .none
-    
-    public var field: Field = Field()
-    
-    public var lightIntensity: CGFloat = 6000
-    
-    private let bundle: String = "FieldImages_FieldImages.bundle"
-    
-    private var scene: SCNScene = SCNScene()
-    
-    private var cameraNode: SCNNode = SCNNode()
-    
-    private var camera: SCNCamera = SCNCamera()
-    
-    private var homeRobotNodes: [Int: SCNNode] = [:]
-    
-    private var awayRobotNodes: [Int: SCNNode] = [:]
-    
-    private var lightNodes: [SCNNode] = []
-    
     public var scnView: SCNView = SCNView()
-
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do view setup here.
+    
+    public var scene: SCNScene = SCNScene()
+    
+    public var cameraNode: SCNNode = SCNNode()
+    
+    public var camera: SCNCamera = SCNCamera()
+    
+    public var homeRobotNodes: [Int: SCNNode] = [:]
+    
+    public var awayRobotNodes: [Int: SCNNode] = [:]
+    
+    public var lightNodes: [SCNNode] = []
+    
+    private lazy var bundle: String = {
+        guard let bundle = Bundle.allBundles.first(where : {
+            $0.bundlePath.contains("FieldImages")
+        }) else {
+            fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath })")
+        }
+        return bundle.bundlePath
+    }()
+    
+    public init(field: Field, perspective: Perspective) {
         scnView.backgroundColor = .black
         // Field
-        guard let field = SCNScene(named: self.bundle + "/field.scnassets/field.scn")?.rootNode.childNode(withName: "field", recursively: true) else {
-            fatalError("Unable to load the field node.")
+        guard let fieldNode = SCNScene(named: self.bundle + "/field.scnassets/field.scn")?.rootNode.childNode(withName: "field", recursively: true) else {
+            fatalError("Unable to get field node.")
         }
-        scene.rootNode.addChildNode(field)
+        scene.rootNode.addChildNode(fieldNode)
         // Lights
         let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
         lightCoordinates.forEach {
             let light = SCNLight()
             light.type = .omni
-            light.intensity = self.lightIntensity
+            light.intensity = CGFloat(field.lightIntensity)
             light.attenuationStartDistance = 0
             light.attenuationEndDistance = 20
             light.attenuationFalloffExponent = 4
@@ -126,50 +124,49 @@ public class PerspectiveViewController: NSViewController {
             node.position.x = $0.x
             node.position.z = $0.z
             node.position.y = 10
-            self.lightNodes.append(node)
+            lightNodes.append(node)
             scene.rootNode.addChildNode(node)
-            // Home Goal
-            guard let homeGoal = SCNScene(named: self.bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
-                fatalError("Unable to load home goal node.")
-            }
-            homeGoal.position.x = -4.55
-            homeGoal.position.y = 0.001
-            homeGoal.rotation.y = 1.0
-            homeGoal.rotation.w = CGFloat(Double.pi)
-            scene.rootNode.addChildNode(homeGoal)
-            // Away Goal
-            guard let awayGoal = SCNScene(named: self.bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
-                fatalError("Unable to load the away goal node.")
-            }
-            awayGoal.position.x = 4.55
-            awayGoal.position.y = 0.001
-            scene.rootNode.addChildNode(awayGoal)
-            // Robots
-            for (index, homeNao) in self.field.homeRobots.enumerated() {
-                let nao = self.createNaoNode(for: homeNao)
-                self.homeRobotNodes[index] = nao
-                scene.rootNode.addChildNode(nao)
-            }
-            for (index, awayNao) in self.field.awayRobots.enumerated() {
-                let nao = self.createNaoNode(for: awayNao)
-                self.awayRobotNodes[index] = nao
-                scene.rootNode.addChildNode(nao)
-            }
-            // Camera
-            let (cameraNode, camera) = self.createCameraNode(for: self.perspective)
-            self.cameraNode = cameraNode
-            self.camera = camera
-            scene.rootNode.addChildNode(cameraNode)
         }
-        self.view = scnView
+        // Home Goal
+        guard let homeGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
+            fatalError("Unable to get home goal node.")
+        }
+        homeGoal.position.x = -4.55
+        homeGoal.position.y = 0.001
+        homeGoal.rotation.y = 1.0
+        homeGoal.rotation.w = CGFloat(Double.pi)
+        scene.rootNode.addChildNode(homeGoal)
+        // Away Goal
+        guard let awayGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
+            fatalError("Unable to get away goal node.")
+        }
+        awayGoal.position.x = 4.55
+        awayGoal.position.y = 0.001
+        scene.rootNode.addChildNode(awayGoal)
+        // Robots
+        for (index, homeNao) in field.homeRobots.enumerated() {
+            let nao = self.createNaoNode(for: homeNao)
+            homeRobotNodes[index] = nao
+            scene.rootNode.addChildNode(nao)
+        }
+        for (index, awayNao) in field.awayRobots.enumerated() {
+            let nao = self.createNaoNode(for: awayNao)
+            awayRobotNodes[index] = nao
+            scene.rootNode.addChildNode(nao)
+        }
+        // Camera
+        let (cameraNode, camera) = self.createCameraNode(for: perspective, in: field)
+        self.cameraNode = cameraNode
+        self.camera = camera
+        scene.rootNode.addChildNode(cameraNode)
     }
     
-    public func update() {
-        self.syncRobotNodes()
-        self.updateCameraNode(self.cameraNode, camera: self.camera, to: self.perspective)
+    public func update(from field: Field, perspective: Perspective) {
+        self.syncRobotNodes(to: field)
+        self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
     
-    private func syncRobotNodes() {
+    private func syncRobotNodes(to field: Field) {
         func sync(robots: [ManageableNaoV5], nodeCount: Int, get: (Int) -> SCNNode, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
@@ -180,7 +177,7 @@ public class PerspectiveViewController: NSViewController {
                     let actualIndex = firstIndex + index
                     let node = self.createNaoNode(for: robot)
                     assign(actualIndex, SCNNode())
-                    self.scene.rootNode.addChildNode(node)
+                    scene.rootNode.addChildNode(node)
                 }
             }
             for (index, robot) in robots.enumerated() {
@@ -189,25 +186,23 @@ public class PerspectiveViewController: NSViewController {
             }
         }
         sync(
-            robots: self.field.homeRobots,
-            nodeCount: self.homeRobotNodes.count,
-            get: { self.homeRobotNodes[$0]! },
-            assign: { self.homeRobotNodes[$0] = $1 },
-            remove: {self.homeRobotNodes[$0]!.removeFromParentNode() }
+            robots: field.homeRobots,
+            nodeCount: homeRobotNodes.count,
+            get: { homeRobotNodes[$0]! },
+            assign: { homeRobotNodes[$0] = $1 },
+            remove: {homeRobotNodes[$0]!.removeFromParentNode() }
         )
         sync(
-            robots: self.field.awayRobots,
-            nodeCount: self.awayRobotNodes.count,
-            get: { self.awayRobotNodes[$0]! },
-            assign: { self.awayRobotNodes[$0] = $1 },
-            remove: {self.awayRobotNodes[$0]!.removeFromParentNode() }
+            robots: field.awayRobots,
+            nodeCount: awayRobotNodes.count,
+            get: { awayRobotNodes[$0]! },
+            assign: { awayRobotNodes[$0] = $1 },
+            remove: {awayRobotNodes[$0]!.removeFromParentNode() }
         )
     }
     
     private func createNaoNode(for nao: ManageableNaoV5) -> SCNNode {
-        guard let node = SCNScene(named: self.bundle + "/nao.scnassets/nao.scn")?.rootNode.childNode(withName: "nao", recursively: true) else {
-            fatalError("Unable to load the nao node.")
-        }
+        let node = SCNScene(named: bundle + "/nao.scnassets/nao.scn")!.rootNode.childNode(withName: "nao", recursively: true)!
         self.updateNaoNode(node, for: nao)
         return node
     }
@@ -224,15 +219,15 @@ public class PerspectiveViewController: NSViewController {
         return
     }
     
-    private func createCameraNode(for perspective: Perspective) -> (SCNNode, SCNCamera) {
+    private func createCameraNode(for perspective: Perspective, in field: Field) -> (SCNNode, SCNCamera) {
         let node = SCNNode()
         let camera = SCNCamera()
         node.camera = camera
-        self.updateCameraNode(node, camera: camera, to: perspective)
+        self.updateCameraNode(node, camera: camera, to: perspective, in: field)
         return (node, camera)
     }
     
-    private func updateCameraNode(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective) {
+    private func updateCameraNode(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective, in field: Field) {
         func noPerspective() {
             node.position = SCNVector3(x: 0, y: 8, z: 0)
             node.eulerAngles.x = CGFloat.pi / -2.0
@@ -246,12 +241,12 @@ public class PerspectiveViewController: NSViewController {
         let naoCamera: Camera
         switch perspective {
         case .home(let index, let cameraPerspective):
-            robot = self.field.homeRobots[index]
+            robot = field.homeRobots[index]
             let temp = self.robotCamera(for: cameraPerspective, of: robot)
             cameraPivot = temp.0
             naoCamera = temp.1
         case .away(let index, let cameraPerspective):
-            robot = self.field.homeRobots[index]
+            robot = field.homeRobots[index]
             let temp = self.robotCamera(for: cameraPerspective, of: robot)
             cameraPivot = temp.0
             naoCamera = temp.1

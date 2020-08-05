@@ -62,29 +62,28 @@ import GUCoordinates
 import Nao
 import SceneKit
 
-public struct PerspectiveView: NSViewControllerRepresentable {
+public struct PerspectiveView: NSViewRepresentable {
     
-    @State public var perspective: PerspectiveViewController.Perspective = .none
+    public var field: Field
     
-    @State public var field: Field = Field()
+    public var perspective: FieldScene.Perspective
     
-    @State public var lightIntensity: CGFloat = 6000
+    private var fieldScene: FieldScene
     
-    public init() {}
-    
-    public func makeNSViewController(context _: Context) -> PerspectiveViewController {
-        let viewController = PerspectiveViewController()
-        viewController.field = self.field
-        viewController.perspective = self.perspective
-        viewController.lightIntensity = self.lightIntensity
-        return viewController
+    public init(field: Field = Field(), perspective: FieldScene.Perspective = .none) {
+        self.field = field
+        self.perspective = perspective
+        self.fieldScene = FieldScene(field: field, perspective: perspective)
     }
     
-    public func updateNSViewController(_ viewController: PerspectiveViewController, context _: Context) {
-        viewController.field = self.field
-        viewController.perspective = self.perspective
-        viewController.lightIntensity = self.lightIntensity
-        viewController.update()
+    public func makeNSView(context: Context) -> SCNView {
+        let view = SCNView()
+        view.scene = self.fieldScene.scene
+        return view
+    }
+    
+    public func updateNSView(_ nsView: SCNView, context: Context) {
+        self.fieldScene.update(from: self.field, perspective: self.perspective)
     }
     
 }

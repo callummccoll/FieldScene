@@ -69,9 +69,12 @@ public struct Field {
     
     public var awayRobots: [ManageableNaoV5]
     
-    public init(homeRobots: [ManageableNaoV5] = [], awayRobots: [ManageableNaoV5] = []) {
+    public var lightIntensity: Double
+    
+    public init(homeRobots: [ManageableNaoV5] = [], awayRobots: [ManageableNaoV5] = [], lightIntensity: Double = 6000) {
         self.homeRobots = homeRobots
         self.awayRobots = awayRobots
+        self.lightIntensity = lightIntensity
     }
 
     
