@@ -99,8 +99,7 @@ public struct Field {
         scene.rootNode.addChildNode(cameraNode)
         
         cameraNode.position = SCNVector3(x: 0, y: 8, z: 0)
-        cameraNode.rotation.x = 1.0
-        cameraNode.rotation.w = CGFloat.pi / -2.0
+        cameraNode.eulerAngles.x = CGFloat.pi / -2.0
         
         // retrieve the SCNView
         let scnView = SCNView(frame: NSRect(x: 0, y: 0, width: 640, height: 480))
