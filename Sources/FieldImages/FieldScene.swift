@@ -114,6 +114,7 @@ public class FieldScene {
         guard let fieldNode = SCNScene(named: "field.scn", inDirectory: fieldScenePath)?.rootNode.childNode(withName: "field", recursively: true) else {
             fatalError("Unable to load field node from scene: \(fieldScenePath).")
         }
+        fieldNode.geometry?.material(named: "carpet")?.diffuse.contents = self.bundle + "/field.scnassets/carpet.jpg"
         scene.rootNode.addChildNode(fieldNode)
         // Lights
         let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
