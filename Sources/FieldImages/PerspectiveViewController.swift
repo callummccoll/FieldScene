@@ -107,7 +107,9 @@ public class PerspectiveViewController: NSViewController {
         // Do view setup here.
         scnView.backgroundColor = .black
         // Field
-        let field = SCNScene(named: self.bundle + "/field.scnassets/field.scn")!.rootNode.childNode(withName: "field", recursively: true)!
+        guard let field = SCNScene(named: self.bundle + "/field.scnassets/field.scn")?.rootNode.childNode(withName: "field", recursively: true) else {
+            fatalError("Unable to load the field node.")
+        }
         scene.rootNode.addChildNode(field)
         // Lights
         let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
@@ -127,14 +129,18 @@ public class PerspectiveViewController: NSViewController {
             self.lightNodes.append(node)
             scene.rootNode.addChildNode(node)
             // Home Goal
-            let homeGoal = SCNScene(named: self.bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
+            guard let homeGoal = SCNScene(named: self.bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
+                fatalError("Unable to load home goal node.")
+            }
             homeGoal.position.x = -4.55
             homeGoal.position.y = 0.001
             homeGoal.rotation.y = 1.0
             homeGoal.rotation.w = CGFloat(Double.pi)
             scene.rootNode.addChildNode(homeGoal)
             // Away Goal
-            let awayGoal = SCNScene(named: self.bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
+            guard let awayGoal = SCNScene(named: self.bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
+                fatalError("Unable to load the away goal node.")
+            }
             awayGoal.position.x = 4.55
             awayGoal.position.y = 0.001
             scene.rootNode.addChildNode(awayGoal)
@@ -199,7 +205,9 @@ public class PerspectiveViewController: NSViewController {
     }
     
     private func createNaoNode(for nao: ManageableNaoV5) -> SCNNode {
-        let node = SCNScene(named: self.bundle + "/nao.scnassets/nao.scn")!.rootNode.childNode(withName: "nao", recursively: true)!
+        guard let node = SCNScene(named: self.bundle + "/nao.scnassets/nao.scn")?.rootNode.childNode(withName: "nao", recursively: true) else {
+            fatalError("Unable to load the nao node.")
+        }
         self.updateNaoNode(node, for: nao)
         return node
     }
