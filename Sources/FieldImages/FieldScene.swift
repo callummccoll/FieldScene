@@ -95,7 +95,7 @@ public class FieldScene {
     
     private lazy var bundle: String = {
         let packageBundleName = "FieldImages_FieldImages"
-        let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).path
+        let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).path
         if FileManager.default.fileExists(atPath: expectedBundle) {
             return expectedBundle
         }
