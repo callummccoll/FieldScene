@@ -56,6 +56,7 @@
  *
  */
 
+import GUUnits
 import GUCoordinates
 import Nao
 import Foundation
@@ -76,48 +77,122 @@ public struct Field {
         self.opponents = opponents
     }
     
+    @available(macOS 10.12, *)
     var image: NSImage {
-        let bundle = "FieldImages_FieldImages.bundle"
-        // create a new scene
-        let field = SCNScene(named: bundle + "/field.scnassets/field.scn")!.rootNode.childNode(withName: "field", recursively: true)!
+        // retrieve the SCNView
+        let scnView = SCNView(
+            frame: NSRect(x: 0, y: 0, width: 640, height: 480),
+            options: ["renderingAPI": SCNRenderingAPI.metal]
+        )
+        scnView.backgroundColor = .black
+        // set the scene to the view
+        scnView.scene = self.scene
+        return scnView.snapshot()
+    }
+    
+    private var awayGoal: SCNNode {
+        let awayGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
+        awayGoal.position.x = 4.55
+        awayGoal.position.y = 0.001
+        return awayGoal
+    }
+    
+    private let bundle = "FieldImages_FieldImages.bundle"
+    
+    private var camera: SCNCamera {
+        guard nil != self.player.fieldPosition else {
+            return SCNCamera()
+        }
+        let bottomCamera = self.player.topCamera
+        let camera = SCNCamera()
+        camera.xFov = Double(bottomCamera.hFov.degrees_d)
+        camera.yFov = Double(bottomCamera.vFov.degrees_d)
+        camera.zNear = 0.3
+        return camera
+    }
+    
+    private var cameraNode: SCNNode {
+        let node = SCNNode()
+        guard let fieldPosition = self.player.fieldPosition else {
+            node.position = SCNVector3(x: 0, y: 8, z: 0)
+            node.eulerAngles.x = CGFloat.pi / -2.0
+            node.camera = self.camera
+            return node
+        }
+        let cameraPivot = self.player.topCameraPivot
+        let bottomCamera = self.player.topCamera
+        node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
+        node.position.x = CGFloat(Metres_d(fieldPosition.position.y)) - 0.4
+        node.position.y = CGFloat(cameraPivot.height.metres_d + bottomCamera.height.metres_d)
+        let yaw = fieldPosition.heading.radians_d + cameraPivot.yaw.radians_d
+        let pitch = cameraPivot.pitch.radians_d + bottomCamera.vDirection.radians_d
+        node.eulerAngles.z = CGFloat(-pitch)
+        node.eulerAngles.y = CGFloat(yaw) + CGFloat.pi
+        node.camera = self.camera
+        return node
+    }
+    
+    private var field: SCNNode {
+        return SCNScene(named: bundle + "/field.scnassets/field.scn")!.rootNode.childNode(withName: "field", recursively: true)!
+    }
+    
+    private var homeGoal: SCNNode {
         let homeGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
         homeGoal.position.x = -4.55
         homeGoal.position.y = 0.001
         homeGoal.rotation.y = 1.0
         homeGoal.rotation.w = CGFloat(Double.pi)
-        let awayGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")!.rootNode.childNode(withName: "goal", recursively: true)!
-        awayGoal.position.x = 4.55
-        awayGoal.position.y = 0.001
+        return homeGoal
+    }
+    
+    private var lights: [SCNNode] {
+        let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
+        return lightCoordinates.map {
+            let light = SCNLight()
+            light.type = .omni
+            light.intensity = 6000
+            light.attenuationStartDistance = 0
+            light.attenuationEndDistance = 20
+            light.attenuationFalloffExponent = 4
+            light.castsShadow = true
+            let node = SCNNode()
+            node.light = light
+            node.position.x = $0.x
+            node.position.z = $0.z
+            node.position.y = 10
+            return node
+        }
+    }
+    
+    private var playerNao: SCNNode {
+        let nao = SCNScene(named: bundle + "/nao.scnassets/nao.scn")!.rootNode.childNode(withName: "nao", recursively: true)!
+        guard let fieldPosition = self.player.fieldPosition else {
+            return nao
+        }
+        let cameraPivot = self.player.topCameraPivot
+        let yaw = fieldPosition.heading.radians_d + cameraPivot.yaw.radians_d
+        nao.position.z = CGFloat(Metres_d(fieldPosition.position.x))
+        nao.position.x = CGFloat(Metres_d(fieldPosition.position.y))
+        nao.position.y = 0.001
+        nao.eulerAngles.y = CGFloat(yaw) - CGFloat.pi / 2.0
+        return nao
+    }
+    
+    private var scene: SCNScene {
+        // create a new scene
         let scene = SCNScene()
-        scene.rootNode.addChildNode(field)
-        scene.rootNode.addChildNode(homeGoal)
-        scene.rootNode.addChildNode(awayGoal)
-        
-        // create and add a camera to the scene
-        let cameraNode = SCNNode()
-        cameraNode.camera = SCNCamera()
-        scene.rootNode.addChildNode(cameraNode)
-        
-        cameraNode.position = SCNVector3(x: 0, y: 8, z: 0)
-        cameraNode.eulerAngles.x = CGFloat.pi / -2.0
-        
-        // retrieve the SCNView
-        let scnView = SCNView(frame: NSRect(x: 0, y: 0, width: 640, height: 480))
-        
-        scnView.backgroundColor = .black
-        
-        // set the scene to the view
-        scnView.scene = scene
-        
-        // allows the user to manipulate the camera
-        scnView.allowsCameraControl = true
-        
-        // show statistics such as fps and timing information
-        scnView.showsStatistics = true
-        
-        // configure the view
-        scnView.backgroundColor = NSColor.black
-        return scnView.snapshot()
+        scene.rootNode.addChildNode(self.field)
+        scene.rootNode.addChildNode(self.homeGoal)
+        scene.rootNode.addChildNode(self.awayGoal)
+        // add Lights
+        self.lights.forEach(scene.rootNode.addChildNode)
+        // Add nao
+        if nil != self.player.fieldPosition {
+            scene.rootNode.addChildNode(self.playerNao)
+        }
+        // Add camera to the scene
+        scene.rootNode.addChildNode(self.cameraNode)
+        return scene
     }
     
 }

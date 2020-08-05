@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "FieldImages",
+    platforms: [.macOS(.v10_15)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .executable(
@@ -21,7 +22,7 @@ let package = Package(
         .target(
             name: "FieldImages",
             dependencies: [.product(name: "Nao", package: "GURobots")],
-            resources: [.copy("field.scnassets")]
+            resources: [.copy("field.scnassets"), .copy("nao.scnassets")]
         ),
         .testTarget(
             name: "FieldImagesTests",
