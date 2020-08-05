@@ -70,6 +70,8 @@ public struct PerspectiveView: NSViewControllerRepresentable {
     
     @State public var lightIntensity: CGFloat = 6000
     
+    public init() {}
+    
     public func makeNSViewController(context _: Context) -> PerspectiveViewController {
         let viewController = PerspectiveViewController()
         viewController.field = self.field
