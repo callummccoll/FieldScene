@@ -168,6 +168,13 @@ public class FieldScene {
         scene.rootNode.addChildNode(cameraNode)
     }
     
+    public func renderImage(of field: Field, from perspective: Perspective, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
+        self.update(from: field, perspective: perspective)
+        let view = SCNView(frame: NSRect(x: 0, y: 0, width: Int(resWidth), height: Int(resHeight)))
+        view.scene = self.scene
+        return view.snapshot()
+    }
+    
     public func update(from field: Field, perspective: Perspective) {
         self.syncRobotNodes(to: field)
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
