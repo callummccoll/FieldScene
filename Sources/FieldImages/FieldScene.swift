@@ -216,7 +216,9 @@ public class FieldScene {
     }
     
     private func createNaoNode(for nao: ManageableNaoV5) -> SCNNode {
-        let node = SCNScene(named: bundle + "/nao.scnassets/nao.scn")!.rootNode.childNode(withName: "nao", recursively: true)!
+        guard let node = SCNScene(named: bundle + "/nao.scnassets/nao.scn")?.rootNode.childNode(withName: "nao", recursively: true) else {
+            fatalError("Unable to get nao node.")
+        }
         self.updateNaoNode(node, for: nao)
         return node
     }
