@@ -77,9 +77,7 @@ public struct PerspectiveView: NSViewRepresentable {
     }
     
     public func makeNSView(context: Context) -> SCNView {
-        let view = SCNView()
-        view.scene = self.fieldScene.scene
-        return view
+        return self.fieldScene.scnView
     }
     
     public func updateNSView(_ nsView: SCNView, context: Context) {
