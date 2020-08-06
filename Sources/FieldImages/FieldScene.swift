@@ -100,11 +100,11 @@ public class FieldScene {
             return packageBundleName + ".bundle/Contents/Resources"
         }
         guard let bundle = Bundle.allBundles.first(where : {
-            $0.bundlePath.contains(packageBundleName)
+            return FileManager.default.fileExists(atPath: $0.bundleURL.appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).path)
         }) else {
             fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath }), mainBundle: \(Bundle.main.bundlePath)")
         }
-        return bundle.bundlePath
+        return packageBundleName + ".bundle"
     }()
     
     public init(field: Field, perspective: Perspective) {
