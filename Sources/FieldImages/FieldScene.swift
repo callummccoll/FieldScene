@@ -262,7 +262,7 @@ public class FieldScene {
             cameraPivot = temp.0
             naoCamera = temp.1
         case .away(let index, let cameraPerspective):
-            robot = field.homeRobots[index]
+            robot = field.awayRobots[index]
             let temp = self.robotCamera(for: cameraPerspective, of: robot)
             cameraPivot = temp.0
             naoCamera = temp.1
@@ -280,10 +280,13 @@ public class FieldScene {
         node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
         node.position.x = CGFloat(Metres_d(fieldPosition.position.y))
         node.position.y = CGFloat(cameraPivot.height.metres_d + naoCamera.height.metres_d)
-        let yaw = fieldPosition.heading.radians_d + cameraPivot.yaw.radians_d
+        let yaw = Radians_d((fieldPosition.heading.degrees_d + cameraPivot.yaw.degrees_d))
         let pitch = cameraPivot.pitch.radians_d + naoCamera.vDirection.radians_d
-        node.eulerAngles.z = CGFloat(-pitch)
-        node.eulerAngles.y = CGFloat(yaw) + CGFloat.pi
+        node.eulerAngles.y = CGFloat.pi
+        node.eulerAngles.x = 0.0
+        node.eulerAngles.z = 0.0
+        node.eulerAngles.z -= CGFloat(pitch)
+        node.eulerAngles.y += CGFloat(yaw)
     }
     
     private func robotCamera(for cameraPerspective: CameraPerspective, of robot: ManageableNaoV5) -> (CameraPivot, Camera) {
