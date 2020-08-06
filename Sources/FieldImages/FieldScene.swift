@@ -166,6 +166,7 @@ public class FieldScene {
         self.cameraNode = cameraNode
         self.camera = camera
         scene.rootNode.addChildNode(cameraNode)
+        self.scnView.scene = scene
     }
     
     public func renderImage(of field: Field, from perspective: Perspective, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
