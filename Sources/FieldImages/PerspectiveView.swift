@@ -70,14 +70,19 @@ public struct PerspectiveView: NSViewRepresentable {
     
     private var fieldScene: FieldScene
     
-    public init(field: Field = Field(), perspective: FieldScene.Perspective = .none) {
+    private let allowsCameraControl: Bool
+    
+    public init(field: Field = Field(), perspective: FieldScene.Perspective = .none, allowsCameraControl: Bool = false) {
         self.field = field
         self.perspective = perspective
         self.fieldScene = FieldScene(field: field, perspective: perspective)
+        self.allowsCameraControl = allowsCameraControl
     }
     
     public func makeNSView(context: Context) -> SCNView {
-        return self.fieldScene.scnView
+        let view = self.fieldScene.scnView
+        view.allowsCameraControl = self.allowsCameraControl
+        return view
     }
     
     public func updateNSView(_ nsView: SCNView, context: Context) {
