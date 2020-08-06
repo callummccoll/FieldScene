@@ -247,6 +247,8 @@ public class FieldScene {
         func noPerspective() {
             node.position = SCNVector3(x: 0, y: 8, z: 0)
             node.eulerAngles.x = CGFloat.pi / -2.0
+            node.eulerAngles.y = 0.0
+            node.eulerAngles.z = 0.0
             let tempCamera = SCNCamera()
             camera.xFov = tempCamera.xFov
             camera.yFov = tempCamera.yFov
@@ -282,8 +284,8 @@ public class FieldScene {
         node.position.y = CGFloat(cameraPivot.height.metres_d + naoCamera.height.metres_d)
         let yaw = Radians_d((fieldPosition.heading.degrees_d + cameraPivot.yaw.degrees_d))
         let pitch = cameraPivot.pitch.radians_d + naoCamera.vDirection.radians_d
-        node.eulerAngles.y = CGFloat.pi
         node.eulerAngles.x = 0.0
+        node.eulerAngles.y = CGFloat.pi
         node.eulerAngles.z = 0.0
         node.eulerAngles.z -= CGFloat(pitch)
         node.eulerAngles.y += CGFloat(yaw)
