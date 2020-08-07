@@ -59,20 +59,21 @@
 
 import SwiftUI
 import GUCoordinates
-import Nao
+import GURobots
 import SceneKit
+import Nao
 
-public struct PerspectiveView: NSViewRepresentable {
+public struct PerspectiveView<Robot: FieldRobot>: NSViewRepresentable {
     
-    public var field: Field
+    public var field: Field<Robot>
     
-    public var perspective: FieldScene.Perspective
+    public var perspective: FieldScene<Robot>.Perspective
     
-    private var fieldScene: FieldScene
+    private var fieldScene: FieldScene<Robot>
     
     private let allowsCameraControl: Bool
     
-    public init(field: Field = Field(), perspective: FieldScene.Perspective = .none, allowsCameraControl: Bool = false) {
+    public init(field: Field<Robot> = Field<Robot>(), perspective: FieldScene<Robot>.Perspective = .none, allowsCameraControl: Bool = false) {
         self.field = field
         self.perspective = perspective
         self.fieldScene = FieldScene(field: field, perspective: perspective)
@@ -93,6 +94,6 @@ public struct PerspectiveView: NSViewRepresentable {
 
 struct PerspectiveView_Previews: PreviewProvider {
     static var previews: some View {
-        PerspectiveView()
+        PerspectiveView<ManageableNaoV5>()
     }
 }

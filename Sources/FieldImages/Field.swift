@@ -58,20 +58,22 @@
 
 import GUUnits
 import GUCoordinates
-import Nao
+import GURobots
 import Foundation
 import SceneKit
 import AppKit
 
-public struct Field {
+public typealias FieldRobot = TopCameraContainer & BottomCameraContainer & FieldPositionContainer
+
+public struct Field<Robot> where Robot: FieldRobot {
     
-    public var homeRobots: [ManageableNaoV5]
+    public var homeRobots: [Robot]
     
-    public var awayRobots: [ManageableNaoV5]
+    public var awayRobots: [Robot]
     
     public var lightIntensity: Double
     
-    public init(homeRobots: [ManageableNaoV5] = [], awayRobots: [ManageableNaoV5] = [], lightIntensity: Double = 6000) {
+    public init(homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 6000) {
         self.homeRobots = homeRobots
         self.awayRobots = awayRobots
         self.lightIntensity = lightIntensity

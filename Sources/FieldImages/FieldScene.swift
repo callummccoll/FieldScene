@@ -60,9 +60,9 @@ import SceneKit
 
 import GUUnits
 import GUCoordinates
-import Nao
+import GURobots
 
-public class FieldScene {
+public class FieldScene<Robot: FieldRobot> {
     
     public enum CameraPerspective: Equatable {
         
@@ -117,7 +117,7 @@ public class FieldScene {
         return packageBundleName + ".bundle"
     }()
     
-    public init(field: Field, perspective: Perspective) {
+    public init(field: Field<Robot>, perspective: Perspective) {
         scnView.backgroundColor = .black
         // Field
         let fieldScenePath = self.bundle + "/field.scnassets"
@@ -211,20 +211,20 @@ public class FieldScene {
         node.childNodes.forEach(fixResourcePaths)
     }
     
-    public func renderImage(of field: Field, from perspective: Perspective, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
+    public func renderImage(of field: Field<Robot>, from perspective: Perspective, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
         self.update(from: field, perspective: perspective)
         let view = SCNView(frame: NSRect(x: 0, y: 0, width: Int(resWidth), height: Int(resHeight)))
         view.scene = self.scene
         return view.snapshot()
     }
     
-    public func update(from field: Field, perspective: Perspective) {
+    public func update(from field: Field<Robot>, perspective: Perspective) {
         self.syncRobotNodes(to: field)
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
     
-    private func syncRobotNodes(to field: Field) {
-        func sync(robots: [ManageableNaoV5], nodeCount: Int, get: (Int) -> SCNNode, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
+    private func syncRobotNodes(to field: Field<Robot>) {
+        func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
                 indexRange.forEach(remove)
@@ -258,7 +258,7 @@ public class FieldScene {
         )
     }
     
-    private func createNaoNode(for nao: ManageableNaoV5) -> SCNNode {
+    private func createNaoNode(for nao: Robot) -> SCNNode {
         guard let node = SCNScene(named: bundle + "/nao.scnassets/nao.scn")?.rootNode.childNode(withName: "nao", recursively: true) else {
             fatalError("Unable to get nao node.")
         }
@@ -267,7 +267,7 @@ public class FieldScene {
         return node
     }
     
-    private func updateNaoNode(_ node: SCNNode, for nao: ManageableNaoV5) {
+    private func updateNaoNode(_ node: SCNNode, for nao: Robot) {
         guard let fieldPosition = nao.fieldPosition else {
             return
         }
@@ -279,7 +279,7 @@ public class FieldScene {
         return
     }
     
-    private func createCameraNode(for perspective: Perspective, in field: Field) -> (SCNNode, SCNCamera) {
+    private func createCameraNode(for perspective: Perspective, in field: Field<Robot>) -> (SCNNode, SCNCamera) {
         let node = SCNNode()
         let camera = SCNCamera()
         node.camera = camera
@@ -287,7 +287,7 @@ public class FieldScene {
         return (node, camera)
     }
     
-    private func updateCameraNode(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective, in field: Field) {
+    private func updateCameraNode(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective, in field: Field<Robot>) {
         func noPerspective() {
             node.position = SCNVector3(x: 0, y: 8, z: 0)
             node.eulerAngles.x = CGFloat.pi / -2.0
@@ -298,7 +298,7 @@ public class FieldScene {
             camera.yFov = tempCamera.yFov
             camera.zNear = tempCamera.zNear
         }
-        let robot: ManageableNaoV5
+        let robot: Robot
         let cameraPivot: CameraPivot
         let naoCamera: Camera
         switch perspective {
@@ -335,7 +335,7 @@ public class FieldScene {
         node.eulerAngles.y += CGFloat(yaw)
     }
     
-    private func robotCamera(for cameraPerspective: CameraPerspective, of robot: ManageableNaoV5) -> (CameraPivot, Camera) {
+    private func robotCamera(for cameraPerspective: CameraPerspective, of robot: Robot) -> (CameraPivot, Camera) {
         switch cameraPerspective {
         case .top:
             return (robot.topCameraPivot, robot.topCamera)
