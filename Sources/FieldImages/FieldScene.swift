@@ -93,8 +93,18 @@ public class FieldScene {
     
     public var lightNodes: [SCNNode] = []
     
-    private lazy var bundle: String = {
+    private let packageBundleName = "fieldImages_FieldImages"
+    
+    private lazy var resourcesURL: URL? = {
         let packageBundleName = "FieldImages_FieldImages"
+        let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true)
+        if FileManager.default.fileExists(atPath: expectedBundle.path) {
+            return expectedBundle
+        }
+        return nil
+    }()
+    
+    private lazy var bundle: String = {
         let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).path
         if FileManager.default.fileExists(atPath: expectedBundle) {
             return packageBundleName + ".bundle/Contents/Resources"
@@ -114,7 +124,7 @@ public class FieldScene {
         guard let fieldNode = SCNScene(named: "field.scn", inDirectory: fieldScenePath)?.rootNode.childNode(withName: "field", recursively: true) else {
             fatalError("Unable to load field node from scene: \(fieldScenePath).")
         }
-        fieldNode.geometry?.material(named: "carpet")?.diffuse.contents = URL(fileURLWithPath: self.bundle + "/field.scnassets/carpet.jpg", isDirectory: false)
+        self.fixResourcePaths(ofNode: fieldNode)
         scene.rootNode.addChildNode(fieldNode)
         // Lights
         let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
@@ -167,6 +177,38 @@ public class FieldScene {
         self.camera = camera
         scene.rootNode.addChildNode(cameraNode)
         self.scnView.scene = scene
+        self.fixResourcePaths(ofNode: fieldNode)
+        self.fixResourcePaths(ofNode: homeGoal)
+        self.fixResourcePaths(ofNode: awayGoal)
+    }
+    
+    private func fixResourcePaths(ofNode node: SCNNode) {
+        func fixPath(_ path: URL) -> URL? {
+            let components = path.pathComponents.drop(while: { $0 != "FieldImages" }).dropFirst(2)
+            if components.isEmpty {
+                return nil
+            }
+            guard let resourcesURL = self.resourcesURL else {
+                return nil
+            }
+            return URL(fileURLWithPath: components.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
+        }
+        func fixContents(_ contents: Any?) -> URL? {
+            if let path = contents as? String {
+                return fixPath(URL(fileURLWithPath: path, isDirectory: false))
+            }
+            if let path = contents as? URL {
+                return fixPath(path)
+            }
+            return nil
+        }
+        node.geometry?.materials.forEach {
+            guard let path = fixContents($0.diffuse.contents) else {
+                return
+            }
+            $0.diffuse.contents = path
+        }
+        node.childNodes.forEach(fixResourcePaths)
     }
     
     public func renderImage(of field: Field, from perspective: Perspective, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
@@ -220,6 +262,7 @@ public class FieldScene {
         guard let node = SCNScene(named: bundle + "/nao.scnassets/nao.scn")?.rootNode.childNode(withName: "nao", recursively: true) else {
             fatalError("Unable to get nao node.")
         }
+        self.fixResourcePaths(ofNode: node)
         self.updateNaoNode(node, for: nao)
         return node
     }
