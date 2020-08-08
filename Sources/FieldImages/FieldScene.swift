@@ -149,7 +149,7 @@ public class FieldScene<Robot: FieldRobot> {
             fatalError("Unable to get home goal node.")
         }
         homeGoal.position.x = -4.55
-        homeGoal.position.y = 0.001
+        homeGoal.position.y = 0.101
         homeGoal.rotation.y = 1.0
         homeGoal.rotation.w = CGFloat(Double.pi)
         scene.rootNode.addChildNode(homeGoal)
@@ -158,7 +158,7 @@ public class FieldScene<Robot: FieldRobot> {
             fatalError("Unable to get away goal node.")
         }
         awayGoal.position.x = 4.55
-        awayGoal.position.y = 0.001
+        awayGoal.position.y = 0.101
         scene.rootNode.addChildNode(awayGoal)
         // Robots
         for (index, homeNao) in field.homeRobots.enumerated() {
@@ -274,7 +274,7 @@ public class FieldScene<Robot: FieldRobot> {
         let yaw = fieldPosition.heading.radians_d
         node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
         node.position.x = CGFloat(Metres_d(fieldPosition.position.y))
-        node.position.y = 0.001
+        node.position.y = 0.101
         node.eulerAngles.y = CGFloat(yaw) - CGFloat.pi / 2.0
         return
     }
