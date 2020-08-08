@@ -65,18 +65,18 @@ import Nao
 
 public struct PerspectiveView<Robot: FieldRobot>: NSViewRepresentable {
     
-    public var field: Field<Robot>
+    public var field: Binding<Field<Robot>>
     
-    public var perspective: FieldScene<Robot>.Perspective
+    public var perspective: Binding<FieldScene<Robot>.Perspective>
     
     private var fieldScene: FieldScene<Robot>
     
     private let allowsCameraControl: Bool
     
-    public init(field: Field<Robot> = Field<Robot>(), perspective: FieldScene<Robot>.Perspective = .none, allowsCameraControl: Bool = false) {
+    public init(field: Binding<Field<Robot>>, perspective: Binding<FieldScene<Robot>.Perspective>, allowsCameraControl: Bool = false) {
         self.field = field
         self.perspective = perspective
-        self.fieldScene = FieldScene(field: field, perspective: perspective)
+        self.fieldScene = FieldScene(field: field.wrappedValue, perspective: perspective.wrappedValue)
         self.allowsCameraControl = allowsCameraControl
     }
     
@@ -87,13 +87,13 @@ public struct PerspectiveView<Robot: FieldRobot>: NSViewRepresentable {
     }
     
     public func updateNSView(_ nsView: SCNView, context: Context) {
-        self.fieldScene.update(from: self.field, perspective: self.perspective)
+        self.fieldScene.update(from: self.field.wrappedValue, perspective: self.perspective.wrappedValue)
     }
     
 }
 
 struct PerspectiveView_Previews: PreviewProvider {
     static var previews: some View {
-        PerspectiveView<ManageableNaoV5>()
+        PerspectiveView<ManageableNaoV5>(field: .constant(Field()), perspective: .constant(.none))
     }
 }
