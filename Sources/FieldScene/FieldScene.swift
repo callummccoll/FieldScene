@@ -102,10 +102,9 @@ public class FieldScene<Robot: FieldPositionContainer> {
     
     public var lightNodes: [SCNNode] = []
     
-    private let packageBundleName = "fieldImages_FieldImages"
+    private let packageBundleName = "FieldScene_FieldScene"
     
     private lazy var resourcesURL: URL? = {
-        let packageBundleName = "FieldImages_FieldImages"
         let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true)
         if FileManager.default.fileExists(atPath: expectedBundle.path) {
             return expectedBundle
