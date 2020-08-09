@@ -1,3 +1,3 @@
-# FieldImages
+# FieldScene
 
-A description of this package.
+A SceneKit visualisation of the robocup standard platform leaguet  soccer field.
