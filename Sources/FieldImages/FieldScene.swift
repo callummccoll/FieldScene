@@ -184,7 +184,7 @@ public class FieldScene<Robot: FieldRobot> {
     
     private func fixResourcePaths(ofNode node: SCNNode) {
         func fixPath(_ path: URL) -> URL? {
-            let components = path.pathComponents.drop(while: { $0 != "FieldImages" }).dropFirst(2)
+            let components = path.pathComponents.drop(while: { $0 != "FieldImages" }).drop(while: { $0 == "FieldImages"})
             if components.isEmpty {
                 return nil
             }
