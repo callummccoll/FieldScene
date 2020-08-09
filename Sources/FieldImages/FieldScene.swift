@@ -80,6 +80,14 @@ public class FieldScene<Robot: FieldPositionContainer> {
         
     }
     
+    public enum RobotModel: String, Equatable {
+        
+        case nao
+        
+    }
+    
+    private let robotModel: RobotModel
+    
     public var scnView: SCNView = SCNView()
     
     public var scene: SCNScene = SCNScene()
@@ -118,7 +126,8 @@ public class FieldScene<Robot: FieldPositionContainer> {
         return packageBundleName + ".bundle"
     }()
     
-    public init(field: Field<Robot>, perspective: Perspective) {
+    public init(field: Field<Robot>, perspective: Perspective, robotModel: RobotModel = .nao) {
+        self.robotModel = robotModel
         scnView.backgroundColor = .black
         // Field
         let fieldScenePath = self.bundle + "/field.scnassets"
@@ -162,15 +171,15 @@ public class FieldScene<Robot: FieldPositionContainer> {
         awayGoal.position.y = 0.101
         scene.rootNode.addChildNode(awayGoal)
         // Robots
-        for (index, homeNao) in field.homeRobots.enumerated() {
-            let nao = self.createNaoNode(for: homeNao)
-            homeRobotNodes[index] = nao
-            scene.rootNode.addChildNode(nao)
+        for (index, homeRobot) in field.homeRobots.enumerated() {
+            let robotNode = self.createRobotNode(for: homeRobot)
+            homeRobotNodes[index] = robotNode
+            scene.rootNode.addChildNode(robotNode)
         }
-        for (index, awayNao) in field.awayRobots.enumerated() {
-            let nao = self.createNaoNode(for: awayNao)
-            awayRobotNodes[index] = nao
-            scene.rootNode.addChildNode(nao)
+        for (index, awayRobot) in field.awayRobots.enumerated() {
+            let robotNode = self.createRobotNode(for: awayRobot)
+            awayRobotNodes[index] = robotNode
+            scene.rootNode.addChildNode(robotNode)
         }
         // Camera
         let (cameraNode, camera) = self.createCameraNode(for: perspective, in: field)
@@ -237,7 +246,7 @@ public class FieldScene<Robot: FieldPositionContainer> {
                     if let temp = get(actualIndex) {
                         node = temp
                     } else {
-                        let temp = self.createNaoNode(for: robot)
+                        let temp = self.createRobotNode(for: robot)
                         node = temp
                         assign(actualIndex, node)
                     }
@@ -245,7 +254,7 @@ public class FieldScene<Robot: FieldPositionContainer> {
                 }
             }
             for (index, robot) in robots.enumerated() {
-                self.updateNaoNode(get(index)!, for: robot)
+                self.updateRobotNode(get(index)!, for: robot)
             }
         }
         sync(
@@ -264,17 +273,18 @@ public class FieldScene<Robot: FieldPositionContainer> {
         )
     }
     
-    private func createNaoNode(for nao: Robot) -> SCNNode {
-        guard let node = SCNScene(named: bundle + "/nao.scnassets/nao.scn")?.rootNode.childNode(withName: "nao", recursively: true) else {
-            fatalError("Unable to get nao node.")
+    private func createRobotNode(for robot: Robot) -> SCNNode {
+        let path = bundle + "/" + self.robotModel.rawValue + ".scnassets/" + self.robotModel.rawValue + ".scn"
+        guard let node = SCNScene(named: path)?.rootNode.childNode(withName: self.robotModel.rawValue, recursively: true) else {
+            fatalError("Unable to get " + self.robotModel.rawValue + " node.")
         }
         self.fixResourcePaths(ofNode: node)
-        self.updateNaoNode(node, for: nao)
+        self.updateRobotNode(node, for: robot)
         return node
     }
     
-    private func updateNaoNode(_ node: SCNNode, for nao: Robot) {
-        guard let fieldPosition = nao.fieldPosition else {
+    private func updateRobotNode(_ node: SCNNode, for robot: Robot) {
+        guard let fieldPosition = robot.fieldPosition else {
             return
         }
         let yaw = fieldPosition.heading.radians_d
@@ -306,16 +316,16 @@ public class FieldScene<Robot: FieldPositionContainer> {
         }
         let robot: Robot
         let cameraPivot: CameraPivot
-        let naoCamera: Camera
+        let robotCamera: Camera
         switch perspective {
         case .home(let index, let cameraPerspective):
             robot = field.homeRobots[index]
             cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
-            naoCamera = robot[keyPath: cameraPerspective.camera]
+            robotCamera = robot[keyPath: cameraPerspective.camera]
         case .away(let index, let cameraPerspective):
             robot = field.awayRobots[index]
             cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
-            naoCamera = robot[keyPath: cameraPerspective.camera]
+            robotCamera = robot[keyPath: cameraPerspective.camera]
         case .none:
             noPerspective()
             return
@@ -324,14 +334,14 @@ public class FieldScene<Robot: FieldPositionContainer> {
             noPerspective()
             return
         }
-        camera.xFov = Double(naoCamera.hFov.degrees_d)
-        camera.yFov = Double(naoCamera.vFov.degrees_d)
+        camera.xFov = Double(robotCamera.hFov.degrees_d)
+        camera.yFov = Double(robotCamera.vFov.degrees_d)
         camera.zNear = 0.3
         node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
         node.position.x = CGFloat(Metres_d(fieldPosition.position.y))
-        node.position.y = CGFloat(cameraPivot.height.metres_d + naoCamera.height.metres_d)
+        node.position.y = CGFloat(cameraPivot.height.metres_d + robotCamera.height.metres_d)
         let yaw = Radians_d((fieldPosition.heading.degrees_d + cameraPivot.yaw.degrees_d))
-        let pitch = cameraPivot.pitch.radians_d + naoCamera.vDirection.radians_d
+        let pitch = cameraPivot.pitch.radians_d + robotCamera.vDirection.radians_d
         node.eulerAngles.x = 0.0
         node.eulerAngles.y = CGFloat.pi
         node.eulerAngles.z = 0.0
