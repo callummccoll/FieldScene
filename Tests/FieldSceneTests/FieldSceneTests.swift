@@ -1,9 +1,9 @@
 import XCTest
-@testable import FieldImages
+@testable import FieldScene
 import GUCoordinates
-import Nao
+import GURobots
 
-final class FieldImagesTests: XCTestCase {
+final class FieldSceneTests: XCTestCase {
     func testExample() {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct

@@ -1,7 +1,7 @@
 import XCTest
 
-import FieldImagesTests
+import FieldSceneTests
 
 var tests = [XCTestCaseEntry]()
-tests += FieldImagesTests.allTests()
+tests += FieldSceneTests.allTests()
 XCTMain(tests)
