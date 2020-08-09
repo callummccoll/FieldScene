@@ -62,12 +62,13 @@ import GUUnits
 import GUCoordinates
 import GURobots
 
-public class FieldScene<Robot: FieldRobot> {
+public class FieldScene<Robot: FieldPositionContainer> {
     
-    public enum CameraPerspective: Equatable {
+    public struct CameraPerspective: Equatable {
         
-        case top
-        case bottom
+        public var cameraPivot: KeyPath<Robot, CameraPivot>
+        
+        public var camera: KeyPath<Robot, Camera>
         
     }
     
@@ -304,14 +305,12 @@ public class FieldScene<Robot: FieldRobot> {
         switch perspective {
         case .home(let index, let cameraPerspective):
             robot = field.homeRobots[index]
-            let temp = self.robotCamera(for: cameraPerspective, of: robot)
-            cameraPivot = temp.0
-            naoCamera = temp.1
+            cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
+            naoCamera = robot[keyPath: cameraPerspective.camera]
         case .away(let index, let cameraPerspective):
             robot = field.awayRobots[index]
-            let temp = self.robotCamera(for: cameraPerspective, of: robot)
-            cameraPivot = temp.0
-            naoCamera = temp.1
+            cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
+            naoCamera = robot[keyPath: cameraPerspective.camera]
         case .none:
             noPerspective()
             return
@@ -335,13 +334,20 @@ public class FieldScene<Robot: FieldRobot> {
         node.eulerAngles.y += CGFloat(yaw)
     }
     
-    private func robotCamera(for cameraPerspective: CameraPerspective, of robot: Robot) -> (CameraPivot, Camera) {
-        switch cameraPerspective {
-        case .top:
-            return (robot.topCameraPivot, robot.topCamera)
-        case .bottom:
-            return (robot.bottomCameraPivot, robot.bottomCamera)
-        }
+}
+
+extension FieldScene.CameraPerspective where Robot: TopCameraContainer {
+    
+    public static var top: FieldScene<Robot>.CameraPerspective {
+        return FieldScene<Robot>.CameraPerspective(cameraPivot: \.topCameraPivot, camera: \.topCamera)
+    }
+    
+}
+
+extension FieldScene.CameraPerspective where Robot: BottomCameraContainer {
+    
+    public static var bottom: FieldScene<Robot>.CameraPerspective {
+        return FieldScene<Robot>.CameraPerspective(cameraPivot: \.bottomCameraPivot, camera: \.bottomCamera)
     }
     
 }

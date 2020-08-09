@@ -63,9 +63,7 @@ import Foundation
 import SceneKit
 import AppKit
 
-public typealias FieldRobot = TopCameraContainer & BottomCameraContainer & FieldPositionContainer
-
-public struct Field<Robot> where Robot: FieldRobot {
+public struct Field<Robot: FieldPositionContainer> {
     
     public var homeRobots: [Robot]
     
