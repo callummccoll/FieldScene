@@ -225,7 +225,7 @@ public class FieldScene<Robot: FieldPositionContainer> {
     }
     
     private func syncRobotNodes(to field: Field<Robot>) {
-        func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
+        func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode?, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
                 indexRange.forEach(remove)
@@ -233,29 +233,34 @@ public class FieldScene<Robot: FieldPositionContainer> {
                 let firstIndex = nodeCount
                 for (index, robot) in robots[nodeCount..<robots.count].enumerated() {
                     let actualIndex = firstIndex + index
-                    let node = self.createNaoNode(for: robot)
-                    assign(actualIndex, SCNNode())
+                    let node: SCNNode
+                    if let temp = get(actualIndex) {
+                        node = temp
+                    } else {
+                        let temp = self.createNaoNode(for: robot)
+                        node = temp
+                        assign(actualIndex, node)
+                    }
                     scene.rootNode.addChildNode(node)
                 }
             }
             for (index, robot) in robots.enumerated() {
-                let node = get(index)
-                self.updateNaoNode(node, for: robot)
+                self.updateNaoNode(get(index)!, for: robot)
             }
         }
         sync(
             robots: field.homeRobots,
             nodeCount: homeRobotNodes.count,
-            get: { homeRobotNodes[$0]! },
+            get: { homeRobotNodes[$0] },
             assign: { homeRobotNodes[$0] = $1 },
-            remove: {homeRobotNodes[$0]!.removeFromParentNode() }
+            remove: { homeRobotNodes[$0]?.removeFromParentNode() }
         )
         sync(
             robots: field.awayRobots,
             nodeCount: awayRobotNodes.count,
-            get: { awayRobotNodes[$0]! },
+            get: { awayRobotNodes[$0] },
             assign: { awayRobotNodes[$0] = $1 },
-            remove: {awayRobotNodes[$0]!.removeFromParentNode() }
+            remove: {awayRobotNodes[$0]?.removeFromParentNode() }
         )
     }
     
