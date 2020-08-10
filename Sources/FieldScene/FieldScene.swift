@@ -336,16 +336,17 @@ public class FieldScene<Robot: FieldPositionContainer> {
         camera.xFov = Double(robotCamera.hFov.degrees_d)
         camera.yFov = Double(robotCamera.vFov.degrees_d)
         camera.zNear = 0.3
-        node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
-        node.position.x = CGFloat(Metres_d(fieldPosition.position.y))
-        node.position.y = CGFloat(cameraPivot.height.metres_d + robotCamera.height.metres_d)
-        let yaw = Radians_d((fieldPosition.heading.degrees_d + cameraPivot.yaw.degrees_d))
-        let pitch = cameraPivot.pitch.radians_d + robotCamera.vDirection.radians_d
-        node.eulerAngles.x = 0.0
-        node.eulerAngles.y = CGFloat.pi
-        node.eulerAngles.z = 0.0
-        node.eulerAngles.z -= CGFloat(pitch)
-        node.eulerAngles.y += CGFloat(yaw)
+        let yaw = CGFloat(Radians_d((fieldPosition.heading.degrees_d + cameraPivot.yaw.degrees_d)))
+        let pitch = CGFloat(cameraPivot.pitch.radians_d + robotCamera.vDirection.radians_d)
+        node.transform = SCNMatrix4Identity
+        node.transform = SCNMatrix4Rotate(node.transform, CGFloat.pi + yaw, 0, 1.0, 0)
+        node.transform = SCNMatrix4Rotate(node.transform, -pitch, 1.0, 0, 0)
+        node.transform = SCNMatrix4Translate(
+            node.transform,
+            CGFloat(Metres_d(fieldPosition.position.y)),
+            CGFloat(cameraPivot.height.metres_d + robotCamera.height.metres_d),
+            CGFloat(Metres_d(fieldPosition.position.x))
+        )
     }
     
 }
