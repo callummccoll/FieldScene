@@ -212,10 +212,16 @@ public class FieldScene<Robot: FieldPositionContainer> {
             return nil
         }
         node.geometry?.materials.forEach {
-            guard let path = fixContents($0.diffuse.contents) else {
-                return
-            }
-            $0.diffuse.contents = path
+            $0.diffuse.contents = fixContents($0.diffuse.contents) ?? $0.diffuse.contents
+            $0.normal.contents = fixContents($0.normal.contents) ?? $0.normal.contents
+            $0.reflective.contents = fixContents($0.reflective.contents) ?? $0.reflective.contents
+            $0.transparent.contents = fixContents($0.transparent.contents) ?? $0.transparent.contents
+            $0.ambientOcclusion.contents = fixContents($0.ambientOcclusion.contents) ?? $0.ambientOcclusion.contents
+            $0.selfIllumination.contents = fixContents($0.selfIllumination.contents) ?? $0.selfIllumination.contents
+            $0.emission.contents = fixContents($0.emission.contents) ?? $0.emission.contents
+            $0.multiply.contents = fixContents($0.multiply.contents) ?? $0.multiply.contents
+            $0.ambient.contents = fixContents($0.ambient.contents) ?? $0.ambient.contents
+            $0.displacement.contents = fixContents($0.displacement.contents) ?? $0.displacement.contents
         }
         node.childNodes.forEach(fixResourcePaths)
     }
