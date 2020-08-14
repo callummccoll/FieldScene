@@ -61,18 +61,18 @@ import SceneKit
 public extension SCNNode {
     
     static func load(_ name: String, inPackage package: String) -> SCNNode {
-        return Self.load(name, inAsset: name, inScene: name, inPackage: package)
+        return Self.load(name, inScene: name, inAsset: name, inPackage: package)
     }
     
     static func load(_ name: String, inScene scene: String, inPackage package: String) -> SCNNode {
-        return Self.load(name, inAsset: name, inScene: scene, inPackage: package)
+        return Self.load(name, inScene: scene, inAsset: scene, inPackage: package)
     }
     
     static func load(_ name: String, inAsset asset: String, inPackage package: String) -> SCNNode {
-        return Self.load(name, inAsset: asset, inScene: asset, inPackage: package)
+        return Self.load(name, inScene: name, inAsset: asset, inPackage: package)
     }
     
-    static func load(_ name: String, inAsset asset: String, inScene scene: String,  inPackage package: String) -> SCNNode {
+    static func load(_ name: String, inScene scene: String, inAsset asset: String, inPackage package: String) -> SCNNode {
         guard
             let scn = SCNScene(named: scene, inAsset: asset, inPackage: package),
             let node = scn.rootNode.childNode(withName: name, recursively: true)
