@@ -86,7 +86,7 @@ public final class FieldScene {
         self.robotModel = robotModel
         // Field
         let fieldNode = SCNNode.load("field", inPackage: "FieldScene")
-        scene.rootNode.addChildNode(fieldNode)
+        scene.rootNode.addChildNode(fieldNode.flattenedClone())
         // Lights
         let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
         lightCoordinates.forEach {
@@ -106,14 +106,15 @@ public final class FieldScene {
             scene.rootNode.addChildNode(node)
         }
         // Home Goal
-        let homeGoal = SCNNode.load("goal", inAsset: "field", inPackage: "FieldScene")
+        let goalNode = SCNNode.load("goal", inAsset: "field", inPackage: "FieldScene")
+        let homeGoal = goalNode.flattenedClone()
         homeGoal.position.x = -4.55
         homeGoal.position.y = 0.101
         homeGoal.rotation.y = 1.0
         homeGoal.rotation.w = CGFloat(Double.pi)
         scene.rootNode.addChildNode(homeGoal)
         // Away Goal
-        let awayGoal = SCNNode.load("goal", inAsset: "field", inPackage: "FieldScene")
+        let awayGoal = goalNode.flattenedClone()
         awayGoal.position.x = 4.55
         awayGoal.position.y = 0.101
         scene.rootNode.addChildNode(awayGoal)
