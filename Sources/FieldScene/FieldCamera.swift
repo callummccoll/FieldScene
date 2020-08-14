@@ -75,6 +75,37 @@ public final class FieldCamera {
         case none
         case home(index: Int, cameraPerspective: CameraPerspective<Robot>)
         case away(index: Int, cameraPerspective: CameraPerspective<Robot>)
+        case custom(hFov: Angle, vFov: Angle, transform: SCNMatrix4)
+        
+        public static func == (lhs: Perspective<Robot>, rhs: Perspective<Robot>) -> Bool {
+            switch (lhs, rhs) {
+            case (.none, .none):
+                return true
+            case (.home(let lindex, let lperspective), .home(let rindex, let rperspective)), (.away(let lindex, let lperspective), .away(let rindex, let rperspective)):
+                return lindex == rindex && lperspective == rperspective
+            case (.custom(let lhFov, let lvFov, let lmat), .custom(let rhFov, let rvFov, let rmat)):
+                return lhFov.degrees_d == rhFov.degrees_d
+                    && lvFov.degrees_d == rvFov.degrees_d
+                    && lmat.m11 == rmat.m11
+                    && lmat.m12 == rmat.m12
+                    && lmat.m13 == rmat.m13
+                    && lmat.m14 == rmat.m14
+                    && lmat.m21 == rmat.m21
+                    && lmat.m22 == rmat.m22
+                    && lmat.m23 == rmat.m23
+                    && lmat.m24 == rmat.m24
+                    && lmat.m31 == rmat.m31
+                    && lmat.m32 == rmat.m32
+                    && lmat.m33 == rmat.m33
+                    && lmat.m34 == rmat.m34
+                    && lmat.m41 == rmat.m41
+                    && lmat.m42 == rmat.m42
+                    && lmat.m43 == rmat.m43
+                    && lmat.m44 == rmat.m44
+            default:
+                return false
+            }
+        }
         
     }
     
@@ -118,6 +149,11 @@ public final class FieldCamera {
             robotCamera = robot[keyPath: cameraPerspective.camera]
         case .none:
             noPerspective()
+            return
+        case .custom(let hFov, let vFov, let mat):
+            camera.xFov = Double(hFov.degrees_d)
+            camera.yFov = Double(vFov.degrees_d)
+            node.transform = mat
             return
         }
         guard let fieldPosition = robot.fieldPosition else {
