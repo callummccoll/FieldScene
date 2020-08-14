@@ -102,26 +102,28 @@ public extension SCNScene {
             }
             return URL(fileURLWithPath: components.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
         }
-        func fixContents(_ contents: Any?) -> URL? {
-            if let path = contents as? String {
-                return fixPath(URL(fileURLWithPath: path, isDirectory: false))
+        func fixContents(_ material: SCNMaterial, _ keyPath: WritableKeyPath<SCNMaterial, Any?>) {
+            var material = material
+            if let path = material[keyPath: keyPath] as? String, let url = fixPath(URL(fileURLWithPath: path, isDirectory: false)) {
+                material[keyPath: keyPath] = url
+                return
             }
-            if let path = contents as? URL {
-                return fixPath(path)
+            if let path = material[keyPath: keyPath] as? URL, let url = fixPath(path) {
+                material[keyPath: keyPath] = url
+                return
             }
-            return nil
         }
         node.geometry?.materials.forEach {
-            $0.diffuse.contents = fixContents($0.diffuse.contents) ?? $0.diffuse.contents
-            $0.normal.contents = fixContents($0.normal.contents) ?? $0.normal.contents
-            $0.reflective.contents = fixContents($0.reflective.contents) ?? $0.reflective.contents
-            $0.transparent.contents = fixContents($0.transparent.contents) ?? $0.transparent.contents
-            $0.ambientOcclusion.contents = fixContents($0.ambientOcclusion.contents) ?? $0.ambientOcclusion.contents
-            $0.selfIllumination.contents = fixContents($0.selfIllumination.contents) ?? $0.selfIllumination.contents
-            $0.emission.contents = fixContents($0.emission.contents) ?? $0.emission.contents
-            $0.multiply.contents = fixContents($0.multiply.contents) ?? $0.multiply.contents
-            $0.ambient.contents = fixContents($0.ambient.contents) ?? $0.ambient.contents
-            $0.displacement.contents = fixContents($0.displacement.contents) ?? $0.displacement.contents
+            fixContents($0, \.diffuse.contents)
+            fixContents($0, \.normal.contents)
+            fixContents($0, \.reflective.contents)
+            fixContents($0, \.transparent.contents)
+            fixContents($0, \.ambientOcclusion.contents)
+            fixContents($0, \.selfIllumination.contents)
+            fixContents($0, \.emission.contents)
+            fixContents($0, \.multiply.contents)
+            fixContents($0, \.ambient.contents)
+            fixContents($0, \.displacement.contents)
         }
         node.childNodes.forEach { self.fixResourcePaths(ofNode: $0, inPackage: package) }
     }
