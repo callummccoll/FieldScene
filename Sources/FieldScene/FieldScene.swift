@@ -62,23 +62,7 @@ import GUUnits
 import GUCoordinates
 import GURobots
 
-public class FieldScene<Robot: FieldPositionContainer> {
-    
-    public struct CameraPerspective: Equatable {
-        
-        public var cameraPivot: KeyPath<Robot, CameraPivot>
-        
-        public var camera: KeyPath<Robot, Camera>
-        
-    }
-    
-    public enum Perspective: Equatable {
-        
-        case none
-        case home(index: Int, cameraPerspective: CameraPerspective)
-        case away(index: Int, cameraPerspective: CameraPerspective)
-        
-    }
+public final class FieldScene {
     
     public enum RobotModel: String, Equatable {
         
@@ -88,19 +72,15 @@ public class FieldScene<Robot: FieldPositionContainer> {
     
     private let robotModel: RobotModel
     
-    public var scnView: SCNView = SCNView()
+    public private(set) var scene: SCNScene = SCNScene()
     
-    public var scene: SCNScene = SCNScene()
+    public private(set) var homeRobotNodes: [Int: SCNNode] = [:]
     
-    public var cameraNode: SCNNode = SCNNode()
+    public private(set) var awayRobotNodes: [Int: SCNNode] = [:]
     
-    public var camera: SCNCamera = SCNCamera()
+    public private(set) var lightNodes: [SCNNode] = []
     
-    public var homeRobotNodes: [Int: SCNNode] = [:]
-    
-    public var awayRobotNodes: [Int: SCNNode] = [:]
-    
-    public var lightNodes: [SCNNode] = []
+    private var robotNode: SCNNode = SCNNode()
     
     private let packageBundleName = "FieldScene_FieldScene"
     
@@ -125,9 +105,8 @@ public class FieldScene<Robot: FieldPositionContainer> {
         return packageBundleName + ".bundle"
     }()
     
-    public init(field: Field<Robot>, perspective: Perspective, robotModel: RobotModel = .nao) {
+    public init<Robot: FieldPositionContainer>(field: Field<Robot>, robotModel: RobotModel = .nao) {
         self.robotModel = robotModel
-        scnView.backgroundColor = .black
         // Field
         let fieldScenePath = self.bundle + "/field.scnassets"
         guard let fieldNode = SCNScene(named: "field.scn", inDirectory: fieldScenePath)?.rootNode.childNode(withName: "field", recursively: true) else {
@@ -170,6 +149,7 @@ public class FieldScene<Robot: FieldPositionContainer> {
         awayGoal.position.y = 0.101
         scene.rootNode.addChildNode(awayGoal)
         // Robots
+        self.robotNode = self.loadNode(named: robotModel.rawValue)
         for (index, homeRobot) in field.homeRobots.enumerated() {
             let robotNode = self.createRobotNode(for: homeRobot)
             homeRobotNodes[index] = robotNode
@@ -180,15 +160,18 @@ public class FieldScene<Robot: FieldPositionContainer> {
             awayRobotNodes[index] = robotNode
             scene.rootNode.addChildNode(robotNode)
         }
-        // Camera
-        let (cameraNode, camera) = self.createCameraNode(for: perspective, in: field)
-        self.cameraNode = cameraNode
-        self.camera = camera
-        scene.rootNode.addChildNode(cameraNode)
-        self.scnView.scene = scene
         self.fixResourcePaths(ofNode: fieldNode)
         self.fixResourcePaths(ofNode: homeGoal)
         self.fixResourcePaths(ofNode: awayGoal)
+    }
+    
+    private func loadNode(named name: String) -> SCNNode {
+        let path = bundle + "/" + name + ".scnassets/" + name + ".scn"
+        guard let node = SCNScene(named: path)?.rootNode.childNode(withName: name, recursively: true) else {
+            fatalError("Unable to get " + name + " node.")
+        }
+        self.fixResourcePaths(ofNode: node)
+        return node
     }
     
     private func fixResourcePaths(ofNode node: SCNNode) {
@@ -226,19 +209,20 @@ public class FieldScene<Robot: FieldPositionContainer> {
         node.childNodes.forEach(fixResourcePaths)
     }
     
-    public func renderImage(of field: Field<Robot>, from perspective: Perspective, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
-        self.update(from: field, perspective: perspective)
+    public func renderImage<Robot: FieldPositionContainer>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
         let view = SCNView(frame: NSRect(x: 0, y: 0, width: Int(resWidth), height: Int(resHeight)))
+        self.scene.rootNode.addChildNode(camera.cameraNode)
         view.scene = self.scene
-        return view.snapshot()
+        let image = view.snapshot()
+        camera.cameraNode.removeFromParentNode()
+        return image
     }
     
-    public func update(from field: Field<Robot>, perspective: Perspective) {
+    public func update<Robot: FieldPositionContainer>(from field: Field<Robot>) {
         self.syncRobotNodes(to: field)
-        self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
     
-    private func syncRobotNodes(to field: Field<Robot>) {
+    private func syncRobotNodes<Robot: FieldPositionContainer>(to field: Field<Robot>) {
         func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode?, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
@@ -278,17 +262,13 @@ public class FieldScene<Robot: FieldPositionContainer> {
         )
     }
     
-    private func createRobotNode(for robot: Robot) -> SCNNode {
-        let path = bundle + "/" + self.robotModel.rawValue + ".scnassets/" + self.robotModel.rawValue + ".scn"
-        guard let node = SCNScene(named: path)?.rootNode.childNode(withName: self.robotModel.rawValue, recursively: true) else {
-            fatalError("Unable to get " + self.robotModel.rawValue + " node.")
-        }
-        self.fixResourcePaths(ofNode: node)
+    private func createRobotNode<Robot: FieldPositionContainer>(for robot: Robot) -> SCNNode {
+        let node = self.robotNode.flattenedClone()
         self.updateRobotNode(node, for: robot)
         return node
     }
     
-    private func updateRobotNode(_ node: SCNNode, for robot: Robot) {
+    private func updateRobotNode<Robot: FieldPositionContainer>(_ node: SCNNode, for robot: Robot) {
         guard let fieldPosition = robot.fieldPosition else {
             return
         }
@@ -298,77 +278,6 @@ public class FieldScene<Robot: FieldPositionContainer> {
         node.position.y = 0.101
         node.eulerAngles.y = CGFloat(yaw) - CGFloat.pi / 2.0
         return
-    }
-    
-    private func createCameraNode(for perspective: Perspective, in field: Field<Robot>) -> (SCNNode, SCNCamera) {
-        let node = SCNNode()
-        let camera = SCNCamera()
-        node.camera = camera
-        self.updateCameraNode(node, camera: camera, to: perspective, in: field)
-        return (node, camera)
-    }
-    
-    private func updateCameraNode(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective, in field: Field<Robot>) {
-        func noPerspective() {
-            node.position = SCNVector3(x: 0, y: 8, z: 0)
-            node.eulerAngles.x = CGFloat.pi / -2.0
-            node.eulerAngles.y = 0.0
-            node.eulerAngles.z = 0.0
-            let tempCamera = SCNCamera()
-            camera.xFov = tempCamera.xFov
-            camera.yFov = tempCamera.yFov
-            camera.zNear = tempCamera.zNear
-        }
-        let robot: Robot
-        let cameraPivot: CameraPivot
-        let robotCamera: Camera
-        switch perspective {
-        case .home(let index, let cameraPerspective):
-            robot = field.homeRobots[index]
-            cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
-            robotCamera = robot[keyPath: cameraPerspective.camera]
-        case .away(let index, let cameraPerspective):
-            robot = field.awayRobots[index]
-            cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
-            robotCamera = robot[keyPath: cameraPerspective.camera]
-        case .none:
-            noPerspective()
-            return
-        }
-        guard let fieldPosition = robot.fieldPosition else {
-            noPerspective()
-            return
-        }
-        camera.xFov = Double(robotCamera.hFov.degrees_d)
-        camera.yFov = Double(robotCamera.vFov.degrees_d)
-        camera.zNear = 0.3
-        let yaw = CGFloat(Radians_d((fieldPosition.heading.degrees_d + cameraPivot.yaw.degrees_d)))
-        let pitch = CGFloat(cameraPivot.pitch.radians_d + robotCamera.vDirection.radians_d)
-        node.transform = SCNMatrix4Identity
-        node.transform = SCNMatrix4Rotate(node.transform, CGFloat.pi + yaw, 0, 1.0, 0)
-        node.transform = SCNMatrix4Rotate(node.transform, -pitch, 1.0, 0, 0)
-        node.transform = SCNMatrix4Translate(
-            node.transform,
-            CGFloat(Metres_d(fieldPosition.position.y)),
-            CGFloat(cameraPivot.height.metres_d + robotCamera.height.metres_d),
-            CGFloat(Metres_d(fieldPosition.position.x))
-        )
-    }
-    
-}
-
-extension FieldScene.CameraPerspective where Robot: TopCameraContainer {
-    
-    public static var top: FieldScene<Robot>.CameraPerspective {
-        return FieldScene<Robot>.CameraPerspective(cameraPivot: \.topCameraPivot, camera: \.topCamera)
-    }
-    
-}
-
-extension FieldScene.CameraPerspective where Robot: BottomCameraContainer {
-    
-    public static var bottom: FieldScene<Robot>.CameraPerspective {
-        return FieldScene<Robot>.CameraPerspective(cameraPivot: \.bottomCameraPivot, camera: \.bottomCamera)
     }
     
 }
