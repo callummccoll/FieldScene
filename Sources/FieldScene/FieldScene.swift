@@ -82,37 +82,10 @@ public final class FieldScene {
     
     private var robotNode: SCNNode = SCNNode()
     
-    private let packageBundleName = "FieldScene_FieldScene"
-    
-    private lazy var resourcesURL: URL? = {
-        let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true)
-        if FileManager.default.fileExists(atPath: expectedBundle.path) {
-            return expectedBundle
-        }
-        return nil
-    }()
-    
-    private lazy var bundle: String = {
-        let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).path
-        if FileManager.default.fileExists(atPath: expectedBundle) {
-            return packageBundleName + ".bundle/Contents/Resources"
-        }
-        guard let bundle = Bundle.allBundles.first(where : {
-            return FileManager.default.fileExists(atPath: $0.bundleURL.appendingPathComponent(packageBundleName + ".bundle", isDirectory: true).path)
-        }) else {
-            fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath }), mainBundle: \(Bundle.main.bundlePath)")
-        }
-        return packageBundleName + ".bundle"
-    }()
-    
     public init<Robot: FieldPositionContainer>(field: Field<Robot>, robotModel: RobotModel = .nao) {
         self.robotModel = robotModel
         // Field
-        let fieldScenePath = self.bundle + "/field.scnassets"
-        guard let fieldNode = SCNScene(named: "field.scn", inDirectory: fieldScenePath)?.rootNode.childNode(withName: "field", recursively: true) else {
-            fatalError("Unable to load field node from scene: \(fieldScenePath).")
-        }
-        self.fixResourcePaths(ofNode: fieldNode)
+        let fieldNode = SCNNode.load("field", inPackage: "FieldScene")
         scene.rootNode.addChildNode(fieldNode)
         // Lights
         let lightCoordinates: [(x: CGFloat, z: CGFloat)] = [(0, 0), (4, 2.5), (-4, 2.5), (4, -2.5), (-4, -2.5)]
@@ -133,23 +106,19 @@ public final class FieldScene {
             scene.rootNode.addChildNode(node)
         }
         // Home Goal
-        guard let homeGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
-            fatalError("Unable to get home goal node.")
-        }
+        let homeGoal = SCNNode.load("goal", inAsset: "field", inPackage: "FieldScene")
         homeGoal.position.x = -4.55
         homeGoal.position.y = 0.101
         homeGoal.rotation.y = 1.0
         homeGoal.rotation.w = CGFloat(Double.pi)
         scene.rootNode.addChildNode(homeGoal)
         // Away Goal
-        guard let awayGoal = SCNScene(named: bundle + "/field.scnassets/goal.scn")?.rootNode.childNode(withName: "goal", recursively: true) else {
-            fatalError("Unable to get away goal node.")
-        }
+        let awayGoal = SCNNode.load("goal", inAsset: "field", inPackage: "FieldScene")
         awayGoal.position.x = 4.55
         awayGoal.position.y = 0.101
         scene.rootNode.addChildNode(awayGoal)
         // Robots
-        self.robotNode = self.loadNode(named: robotModel.rawValue)
+        self.robotNode = SCNNode.load(robotModel.rawValue, inPackage: "FieldScene")
         for (index, homeRobot) in field.homeRobots.enumerated() {
             let robotNode = self.createRobotNode(for: homeRobot)
             homeRobotNodes[index] = robotNode
@@ -160,53 +129,6 @@ public final class FieldScene {
             awayRobotNodes[index] = robotNode
             scene.rootNode.addChildNode(robotNode)
         }
-        self.fixResourcePaths(ofNode: fieldNode)
-        self.fixResourcePaths(ofNode: homeGoal)
-        self.fixResourcePaths(ofNode: awayGoal)
-    }
-    
-    private func loadNode(named name: String) -> SCNNode {
-        let path = bundle + "/" + name + ".scnassets/" + name + ".scn"
-        guard let node = SCNScene(named: path)?.rootNode.childNode(withName: name, recursively: true) else {
-            fatalError("Unable to get " + name + " node.")
-        }
-        self.fixResourcePaths(ofNode: node)
-        return node
-    }
-    
-    private func fixResourcePaths(ofNode node: SCNNode) {
-        func fixPath(_ path: URL) -> URL? {
-            let components = path.pathComponents.drop(while: { $0 != "FieldImages" }).drop(while: { $0 == "FieldImages"})
-            if components.isEmpty {
-                return nil
-            }
-            guard let resourcesURL = self.resourcesURL else {
-                return nil
-            }
-            return URL(fileURLWithPath: components.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
-        }
-        func fixContents(_ contents: Any?) -> URL? {
-            if let path = contents as? String {
-                return fixPath(URL(fileURLWithPath: path, isDirectory: false))
-            }
-            if let path = contents as? URL {
-                return fixPath(path)
-            }
-            return nil
-        }
-        node.geometry?.materials.forEach {
-            $0.diffuse.contents = fixContents($0.diffuse.contents) ?? $0.diffuse.contents
-            $0.normal.contents = fixContents($0.normal.contents) ?? $0.normal.contents
-            $0.reflective.contents = fixContents($0.reflective.contents) ?? $0.reflective.contents
-            $0.transparent.contents = fixContents($0.transparent.contents) ?? $0.transparent.contents
-            $0.ambientOcclusion.contents = fixContents($0.ambientOcclusion.contents) ?? $0.ambientOcclusion.contents
-            $0.selfIllumination.contents = fixContents($0.selfIllumination.contents) ?? $0.selfIllumination.contents
-            $0.emission.contents = fixContents($0.emission.contents) ?? $0.emission.contents
-            $0.multiply.contents = fixContents($0.multiply.contents) ?? $0.multiply.contents
-            $0.ambient.contents = fixContents($0.ambient.contents) ?? $0.ambient.contents
-            $0.displacement.contents = fixContents($0.displacement.contents) ?? $0.displacement.contents
-        }
-        node.childNodes.forEach(fixResourcePaths)
     }
     
     public func renderImage<Robot: FieldPositionContainer>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
