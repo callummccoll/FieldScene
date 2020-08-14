@@ -72,14 +72,14 @@ public final class FieldCamera {
     
     public enum Perspective<Robot>: Equatable {
         
-        case none
+        case sky
         case home(index: Int, cameraPerspective: CameraPerspective<Robot>)
         case away(index: Int, cameraPerspective: CameraPerspective<Robot>)
         case custom(hFov: Angle, vFov: Angle, transform: SCNMatrix4)
         
         public static func == (lhs: Perspective<Robot>, rhs: Perspective<Robot>) -> Bool {
             switch (lhs, rhs) {
-            case (.none, .none):
+            case (.sky, .sky):
                 return true
             case (.home(let lindex, let lperspective), .home(let rindex, let rperspective)), (.away(let lindex, let lperspective), .away(let rindex, let rperspective)):
                 return lindex == rindex && lperspective == rperspective
@@ -147,7 +147,7 @@ public final class FieldCamera {
             robot = field.awayRobots[index]
             cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
             robotCamera = robot[keyPath: cameraPerspective.camera]
-        case .none:
+        case .sky:
             noPerspective()
             return
         case .custom(let hFov, let vFov, let mat):
