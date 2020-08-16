@@ -96,7 +96,8 @@ public extension SCNScene {
             let tempComponents = path.pathComponents
             let components: ArraySlice<String>
             let index: Int? = tempComponents.reversed().firstIndex(of: "FieldScene")
-            if let index = index {
+            if let temp = index {
+                let index = tempComponents.index(tempComponents.endIndex, offsetBy: -temp)
                 components = tempComponents[tempComponents.index(after: index)..<tempComponents.endIndex]
             } else {
                 components = tempComponents[tempComponents.startIndex..<tempComponents.endIndex]
