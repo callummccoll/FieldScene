@@ -93,6 +93,9 @@ public extension SCNScene {
     
     private func fixResourcePaths(ofNode node: SCNNode, inAsset asset: String, inPackage package: String) {
         func fixPath(_ path: URL) -> URL? {
+            if FileManager.default.fileExists(atPath: path.path) {
+                return path
+            }
             let tempComponents = path.pathComponents
             let components: ArraySlice<String>
             let index: Int? = tempComponents.reversed().firstIndex(of: "FieldScene")
@@ -100,9 +103,9 @@ public extension SCNScene {
                 let index = tempComponents.index(tempComponents.endIndex, offsetBy: -(temp + 1))
                 components = tempComponents[tempComponents.index(after: index)..<tempComponents.endIndex]
             } else {
-                components = tempComponents[tempComponents.startIndex..<tempComponents.endIndex]
+                components = tempComponents[tempComponents.index(before: tempComponents.endIndex)..<tempComponents.endIndex]
             }
-            guard (components.count > 1 && index != nil) || (components.count == 1 && index == nil) else {
+            guard !components.isEmpty else {
                 return nil
             }
             guard let resourcesURL = Self.resourcesURL(ofPackage: package) else {
