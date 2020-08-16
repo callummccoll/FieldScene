@@ -93,8 +93,15 @@ public extension SCNScene {
     
     private func fixResourcePaths(ofNode node: SCNNode, inAsset asset: String, inPackage package: String) {
         func fixPath(_ path: URL) -> URL? {
-            let components = path.pathComponents.drop(while: { $0 != "FieldImages" }).drop(while: { $0 == "FieldImages"})
-            if components.isEmpty {
+            let tempComponents = path.pathComponents
+            let components: ArraySlice<String>
+            let index: Int? = tempComponents.reversed().firstIndex(of: "FieldScene")
+            if let index = index {
+                components = tempComponents[tempComponents.index(after: index)..<tempComponents.endIndex]
+            } else {
+                components = tempComponents[tempComponents.startIndex..<tempComponents.endIndex]
+            }
+            guard (components.count > 1 && index != nil) || (components.count == 1 && index == nil) else {
                 return nil
             }
             guard let resourcesURL = Self.resourcesURL(ofPackage: package) else {
