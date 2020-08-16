@@ -101,7 +101,7 @@ public extension SCNScene {
                 return nil
             }
             if components.count == 1 {
-                let allComponents = [asset] + Array(components)
+                let allComponents = [asset + ".scnassets"] + Array(components)
                 return URL(fileURLWithPath: allComponents.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
             }
             return URL(fileURLWithPath: components.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
