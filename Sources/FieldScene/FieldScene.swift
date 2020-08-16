@@ -74,6 +74,8 @@ public final class FieldScene {
     
     public private(set) var scene: SCNScene = SCNScene()
     
+    public private(set) var ballNode: SCNNode = SCNNode()
+    
     public private(set) var homeRobotNodes: [Int: SCNNode] = [:]
     
     public private(set) var awayRobotNodes: [Int: SCNNode] = [:]
@@ -130,6 +132,10 @@ public final class FieldScene {
             awayRobotNodes[index] = robotNode
             scene.rootNode.addChildNode(robotNode)
         }
+        // Ball
+        self.ballNode = SCNNode.load("ball", inAsset: "field", inPackage: "FieldScene")
+        self.updateBall(from: field.ball)
+        scene.rootNode.addChildNode(self.ballNode)
     }
     
     public func renderImage<Robot: FieldPositionContainer>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
@@ -143,6 +149,12 @@ public final class FieldScene {
     
     public func update<Robot: FieldPositionContainer>(from field: Field<Robot>) {
         self.syncRobotNodes(to: field)
+    }
+    
+    private func updateBall(from position: CartesianCoordinate) {
+        self.ballNode.position.x = CGFloat(Metres_d(position.y))
+        self.ballNode.position.z = CGFloat(Metres_d(position.x))
+        self.ballNode.position.y = 0.101
     }
     
     private func syncRobotNodes<Robot: FieldPositionContainer>(to field: Field<Robot>) {

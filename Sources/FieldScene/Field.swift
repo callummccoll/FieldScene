@@ -65,13 +65,16 @@ import AppKit
 
 public struct Field<Robot: FieldPositionContainer> {
     
+    public var ball: CartesianCoordinate
+    
     public var homeRobots: [Robot]
     
     public var awayRobots: [Robot]
     
     public var lightIntensity: Double
     
-    public init(homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 6000) {
+    public init(ball: CartesianCoordinate = CartesianCoordinate(x: 0, y: 0), homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 6000) {
+        self.ball = ball
         self.homeRobots = homeRobots
         self.awayRobots = awayRobots
         self.lightIntensity = lightIntensity
