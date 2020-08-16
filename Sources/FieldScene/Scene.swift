@@ -67,7 +67,7 @@ public extension SCNScene {
     convenience init?(named name: String, inAsset asset: String, inPackage package: String) {
         let path = Self.bundle(package: package) + "/" + asset + ".scnassets/" + name + ".scn"
         self.init(named: path)
-        self.fixResourcePaths(ofNode: self.rootNode, inPackage: package)
+        self.fixResourcePaths(ofNode: self.rootNode, inAsset: asset, inPackage: package)
     }
     
     private static func bundle(package: String) -> String {
@@ -91,7 +91,7 @@ public extension SCNScene {
         return nil
     }
     
-    private func fixResourcePaths(ofNode node: SCNNode, inPackage package: String) {
+    private func fixResourcePaths(ofNode node: SCNNode, inAsset asset: String, inPackage package: String) {
         func fixPath(_ path: URL) -> URL? {
             let components = path.pathComponents.drop(while: { $0 != "FieldImages" }).drop(while: { $0 == "FieldImages"})
             if components.isEmpty {
@@ -99,6 +99,10 @@ public extension SCNScene {
             }
             guard let resourcesURL = Self.resourcesURL(ofPackage: package) else {
                 return nil
+            }
+            if components.count == 1 {
+                let allComponents = [asset] + Array(components)
+                return URL(fileURLWithPath: allComponents.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
             }
             return URL(fileURLWithPath: components.reduce(resourcesURL.path) { $0 + "/" + $1 }, isDirectory: false)
         }
@@ -125,7 +129,7 @@ public extension SCNScene {
             fixContents($0, \.ambient.contents)
             fixContents($0, \.displacement.contents)
         }
-        node.childNodes.forEach { self.fixResourcePaths(ofNode: $0, inPackage: package) }
+        node.childNodes.forEach { self.fixResourcePaths(ofNode: $0, inAsset: asset, inPackage: package) }
     }
     
 }
