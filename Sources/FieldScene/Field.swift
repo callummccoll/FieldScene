@@ -73,7 +73,7 @@ public struct Field<Robot: FieldPositionContainer> {
     
     public var lightIntensity: Double
     
-    public init(ball: CartesianCoordinate = CartesianCoordinate(x: 0, y: 0), homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 6000) {
+    public init(ball: CartesianCoordinate = CartesianCoordinate(x: 0, y: 0), homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 80) {
         self.ball = ball
         self.homeRobots = homeRobots
         self.awayRobots = awayRobots
