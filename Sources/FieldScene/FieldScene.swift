@@ -154,7 +154,7 @@ public final class FieldScene {
     private func updateBall(from position: CartesianCoordinate) {
         self.ballNode.position.x = CGFloat(Metres_d(position.y))
         self.ballNode.position.z = CGFloat(Metres_d(position.x))
-        self.ballNode.position.y = 0.151
+        self.ballNode.position.y = 0.101
     }
     
     private func syncRobotNodes<Robot: FieldPositionContainer>(to field: Field<Robot>) {
