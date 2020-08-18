@@ -140,8 +140,10 @@ public final class FieldScene {
     
     public func renderImage<Robot: FieldPositionContainer>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
         let view = SCNView(frame: NSRect(x: 0, y: 0, width: Int(resWidth), height: Int(resHeight)))
-        self.scene.rootNode.addChildNode(camera.cameraNode)
         view.scene = self.scene
+        self.scene.rootNode.addChildNode(camera.cameraNode)
+        view.pointOfView = camera.cameraNode
+        view.backgroundColor = .white
         let image = view.snapshot()
         camera.cameraNode.removeFromParentNode()
         return image
