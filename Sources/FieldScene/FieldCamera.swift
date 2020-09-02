@@ -73,16 +73,23 @@ public final class FieldCamera {
     public enum Perspective<Robot>: Equatable {
         
         case sky
-        case home(index: Int, cameraPerspective: CameraPerspective<Robot>)
-        case away(index: Int, cameraPerspective: CameraPerspective<Robot>)
+        case robot(side: FieldSide, index: Int, cameraPerspective: CameraPerspective<Robot>)
         case custom(hFov: Angle, vFov: Angle, transform: SCNMatrix4)
+        
+        public static func away(index: Int, cameraPerspective: CameraPerspective<Robot>) -> Perspective<Robot> {
+            return .robot(side: .away, index: index, cameraPerspective: cameraPerspective)
+        }
+        
+        public static func home(index: Int, cameraPerspective: CameraPerspective<Robot>) -> Perspective<Robot> {
+            return .robot(side: .home, index: index, cameraPerspective: cameraPerspective)
+        }
         
         public static func == (lhs: Perspective<Robot>, rhs: Perspective<Robot>) -> Bool {
             switch (lhs, rhs) {
             case (.sky, .sky):
                 return true
-            case (.home(let lindex, let lperspective), .home(let rindex, let rperspective)), (.away(let lindex, let lperspective), .away(let rindex, let rperspective)):
-                return lindex == rindex && lperspective == rperspective
+            case (.robot(let lside, let lindex, let lperspective), .robot(let rside, let rindex, let rperspective)):
+                return lside == rside && lindex == rindex && lperspective == rperspective
             case (.custom(let lhFov, let lvFov, let lmat), .custom(let rhFov, let rvFov, let rmat)):
                 return lhFov.degrees_d == rhFov.degrees_d
                     && lvFov.degrees_d == rvFov.degrees_d
@@ -139,12 +146,12 @@ public final class FieldCamera {
         let cameraPivot: CameraPivot
         let robotCamera: Camera
         switch perspective {
-        case .home(let index, let cameraPerspective):
-            robot = field.homeRobots[index]
-            cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
-            robotCamera = robot[keyPath: cameraPerspective.camera]
-        case .away(let index, let cameraPerspective):
-            robot = field.awayRobots[index]
+        case .robot(let side, let index, let cameraPerspective):
+            if side == .home {
+                robot = field.homeRobots[index]
+            } else {
+                robot = field.awayRobots[index]
+            }
             cameraPivot = robot[keyPath: cameraPerspective.cameraPivot]
             robotCamera = robot[keyPath: cameraPerspective.camera]
         case .sky:
