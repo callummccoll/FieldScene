@@ -162,7 +162,7 @@ public final class FieldScene {
         self.ballNode.eulerAngles.x = CGFloat(ballPosition.orientation.roll.radians_d)
         self.ballNode.position.x = CGFloat(Metres_d(ballPosition.position.y))
         self.ballNode.position.z = CGFloat(Metres_d(ballPosition.position.x))
-        self.ballNode.position.y = 0.101
+        self.ballNode.position.y = 0.144
     }
     
     private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>) {
