@@ -118,7 +118,7 @@ public class FieldSceneRenderer {
         self.textureCache = textureCache
     }
     
-    public func renderImage<Robot: FieldRobot>(of field: Field<Robot>, inCamera camera: FieldCamera, atTime renderTime: TimeInterval = TimeInterval(0), antialiasingMode: SCNAntialiasingMode = .none) -> NSImage {
+    public func renderPixelBuffer<Robot: FieldRobot>(of field: Field<Robot>, inCamera camera: FieldCamera, atTime renderTime: TimeInterval = TimeInterval(0), antialiasingMode: SCNAntialiasingMode = .none) -> CVPixelBuffer {
         self.scene.scene.rootNode.addChildNode(camera.cameraNode)
         defer { camera.cameraNode.removeFromParentNode() }
         self.renderer.pointOfView = camera.cameraNode
@@ -194,6 +194,11 @@ public class FieldSceneRenderer {
         self.renderer.render(atTime: renderTime, viewport: self.frame, commandBuffer: commandBuffer, passDescriptor: renderPassDescriptor)
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
+        return pixelBuffer
+    }
+    
+    public func renderImage<Robot: FieldRobot>(of field: Field<Robot>, inCamera camera: FieldCamera, atTime renderTime: TimeInterval = TimeInterval(0), antialiasingMode: SCNAntialiasingMode = .none) -> NSImage {
+        let pixelBuffer = self.renderPixelBuffer(of: field, inCamera: camera, atTime: renderTime, antialiasingMode: antialiasingMode)
         let ciImage = CIImage(cvImageBuffer: pixelBuffer)
         let context = CIContext(options: nil)
         guard let cgImage = context.createCGImage(ciImage, from: self.frame) else {
