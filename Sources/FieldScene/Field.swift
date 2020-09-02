@@ -65,7 +65,7 @@ import AppKit
 
 public struct Field<Robot: FieldRobot> {
     
-    public var ball: BallPosition
+    public var ball: BallPosition?
     
     public var homeRobots: [Robot]
     
@@ -73,7 +73,7 @@ public struct Field<Robot: FieldRobot> {
     
     public var lightIntensity: Double
     
-    public init(ball: BallPosition = BallPosition(), homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 80) {
+    public init(ball: BallPosition? = nil, homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 80) {
         self.ball = ball
         self.homeRobots = homeRobots
         self.awayRobots = awayRobots

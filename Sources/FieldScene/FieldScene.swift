@@ -151,9 +151,14 @@ public final class FieldScene {
     
     public func update<Robot: FieldRobot>(from field: Field<Robot>) {
         self.syncRobotNodes(to: field)
+        self.updateBall(from: field.ball)
     }
     
-    private func updateBall(from ballPosition: BallPosition) {
+    private func updateBall(from ballPosition: BallPosition?) {
+        guard let ballPosition = ballPosition else {
+            self.ballNode.removeFromParentNode()
+            return
+        }
         self.ballNode.position.x = 0.0
         self.ballNode.position.y = 0.0
         self.ballNode.position.z = 0.0
@@ -163,6 +168,9 @@ public final class FieldScene {
         self.ballNode.position.x = CGFloat(Metres_d(ballPosition.position.y))
         self.ballNode.position.z = CGFloat(Metres_d(ballPosition.position.x))
         self.ballNode.position.y = 0.144
+        if self.ballNode.parent == nil {
+            self.scene.rootNode.addChildNode(self.ballNode)
+        }
     }
     
     private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>) {
