@@ -118,7 +118,7 @@ public class FieldSceneRenderer {
         self.textureCache = textureCache
     }
     
-    public func renderImage<Robot: FieldPositionContainer>(of field: Field<Robot>, inCamera camera: FieldCamera, atTime renderTime: TimeInterval = TimeInterval(0), antialiasingMode: SCNAntialiasingMode = .none) -> NSImage {
+    public func renderImage<Robot: FieldRobot>(of field: Field<Robot>, inCamera camera: FieldCamera, atTime renderTime: TimeInterval = TimeInterval(0), antialiasingMode: SCNAntialiasingMode = .none) -> NSImage {
         self.scene.scene.rootNode.addChildNode(camera.cameraNode)
         defer { camera.cameraNode.removeFromParentNode() }
         self.renderer.pointOfView = camera.cameraNode

@@ -1,8 +1,8 @@
 /*
- * Field.swift
- * 
+ * FieldRobot.swift
+ * FieldScene
  *
- * Created by Callum McColl on 4/8/20.
+ * Created by Callum McColl on 2/9/20.
  * Copyright © 2020 Callum McColl. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,29 +56,6 @@
  *
  */
 
-import GUUnits
-import GUCoordinates
 import GURobots
-import Foundation
-import SceneKit
-import AppKit
 
-public struct Field<Robot: FieldRobot> {
-    
-    public var ball: BallPosition
-    
-    public var homeRobots: [Robot]
-    
-    public var awayRobots: [Robot]
-    
-    public var lightIntensity: Double
-    
-    public init(ball: BallPosition = BallPosition(), homeRobots: [Robot] = [], awayRobots: [Robot] = [], lightIntensity: Double = 80) {
-        self.ball = ball
-        self.homeRobots = homeRobots
-        self.awayRobots = awayRobots
-        self.lightIntensity = lightIntensity
-    }
-
-    
-}
+public typealias FieldRobot = FieldPositionContainer

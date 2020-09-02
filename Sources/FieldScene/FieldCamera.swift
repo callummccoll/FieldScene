@@ -113,18 +113,18 @@ public final class FieldCamera {
     
     public private(set) var cameraNode: SCNNode
     
-    public init<Robot: FieldPositionContainer>(field: Field<Robot>, perspective: Perspective<Robot>) {
+    public init<Robot: FieldRobot>(field: Field<Robot>, perspective: Perspective<Robot>) {
         self.cameraNode = SCNNode()
         self.camera = SCNCamera()
         self.cameraNode.camera = self.camera
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
     
-    public func update<Robot: FieldPositionContainer>(perspective: Perspective<Robot>, in field: Field<Robot>) {
+    public func update<Robot: FieldRobot>(perspective: Perspective<Robot>, in field: Field<Robot>) {
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
     
-    private func updateCameraNode<Robot: FieldPositionContainer>(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective<Robot>, in field: Field<Robot>) {
+    private func updateCameraNode<Robot: FieldRobot>(_ node: SCNNode, camera: SCNCamera, to perspective: Perspective<Robot>, in field: Field<Robot>) {
         func noPerspective() {
             node.position = SCNVector3(x: 0, y: 8, z: 0)
             node.eulerAngles.x = CGFloat.pi / -2.0

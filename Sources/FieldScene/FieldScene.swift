@@ -84,7 +84,7 @@ public final class FieldScene {
     
     private var robotNode: SCNNode = SCNNode()
     
-    public init<Robot: FieldPositionContainer>(field: Field<Robot>, robotModel: RobotModel = .nao) {
+    public init<Robot: FieldRobot>(field: Field<Robot>, robotModel: RobotModel = .nao) {
         self.robotModel = robotModel
         // Field
         let fieldNode = SCNNode.load("field", inPackage: "FieldScene")
@@ -138,7 +138,7 @@ public final class FieldScene {
         scene.rootNode.addChildNode(self.ballNode)
     }
     
-    public func renderImage<Robot: FieldPositionContainer>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
+    public func renderImage<Robot: FieldRobot>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
         let view = SCNView(frame: NSRect(x: 0, y: 0, width: Int(resWidth), height: Int(resHeight)))
         view.scene = self.scene
         self.scene.rootNode.addChildNode(camera.cameraNode)
@@ -149,17 +149,23 @@ public final class FieldScene {
         return image
     }
     
-    public func update<Robot: FieldPositionContainer>(from field: Field<Robot>) {
+    public func update<Robot: FieldRobot>(from field: Field<Robot>) {
         self.syncRobotNodes(to: field)
     }
     
-    private func updateBall(from position: CartesianCoordinate) {
-        self.ballNode.position.x = CGFloat(Metres_d(position.y))
-        self.ballNode.position.z = CGFloat(Metres_d(position.x))
+    private func updateBall(from ballPosition: BallPosition) {
+        self.ballNode.position.x = 0.0
+        self.ballNode.position.y = 0.0
+        self.ballNode.position.z = 0.0
+        self.ballNode.eulerAngles.z = CGFloat(ballPosition.orientation.pitch.radians_d)
+        self.ballNode.eulerAngles.y = CGFloat(ballPosition.orientation.yaw.radians_d)
+        self.ballNode.eulerAngles.x = CGFloat(ballPosition.orientation.roll.radians_d)
+        self.ballNode.position.x = CGFloat(Metres_d(ballPosition.position.y))
+        self.ballNode.position.z = CGFloat(Metres_d(ballPosition.position.x))
         self.ballNode.position.y = 0.101
     }
     
-    private func syncRobotNodes<Robot: FieldPositionContainer>(to field: Field<Robot>) {
+    private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>) {
         func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode?, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
@@ -199,13 +205,13 @@ public final class FieldScene {
         )
     }
     
-    private func createRobotNode<Robot: FieldPositionContainer>(for robot: Robot) -> SCNNode {
+    private func createRobotNode<Robot: FieldRobot>(for robot: Robot) -> SCNNode {
         let node = self.robotNode.flattenedClone()
         self.updateRobotNode(node, for: robot)
         return node
     }
     
-    private func updateRobotNode<Robot: FieldPositionContainer>(_ node: SCNNode, for robot: Robot) {
+    private func updateRobotNode<Robot: FieldRobot>(_ node: SCNNode, for robot: Robot) {
         guard let fieldPosition = robot.fieldPosition else {
             return
         }
