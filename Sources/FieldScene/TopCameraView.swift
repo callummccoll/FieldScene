@@ -59,13 +59,20 @@
 import SwiftUI
 
 import GURobots
+import SceneKit
 
 @available(macOS 11.0, *)
 public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraContainer {
     
-    let fieldScene: FieldScene
-    let field: Field<Robot>
-    let identity: RobotIdentity
+    private let fieldScene: FieldScene
+    private let field: Field<Robot>
+    private let identity: RobotIdentity
+    
+    private let options: SceneView.Options
+    private let preferredFramesPerSecond: Int
+    private let antialiasingMode: SCNAntialiasingMode
+    private let delegate: SCNSceneRendererDelegate?
+    private let technique: SCNTechnique?
     
     private let topCamera: FieldCamera
     
@@ -73,10 +80,15 @@ public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraConta
         self.field.robot(forIdentity: identity)
     }
     
-    public init(fieldScene: FieldScene, field: Field<Robot>, identity: RobotIdentity) {
+    public init(fieldScene: FieldScene, field: Field<Robot>, identity: RobotIdentity, options: SceneView.Options = [], preferredFramesPerSecond: Int = 60, antialiasingMode: SCNAntialiasingMode = .multisampling4X, delegate: SCNSceneRendererDelegate? = nil, technique: SCNTechnique? = nil) {
         self.fieldScene = fieldScene
         self.field = field
         self.identity = identity
+        self.options = options
+        self.preferredFramesPerSecond = preferredFramesPerSecond
+        self.antialiasingMode = antialiasingMode
+        self.delegate = delegate
+        self.technique = technique
         self.topCamera = FieldCamera(
             field: field,
             perspective: .robot(side: identity.side, index: identity.playerIndex, cameraPerspective: .top)
@@ -85,7 +97,7 @@ public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraConta
     }
     
     public var body: some View {
-        FieldView(scene: self.fieldScene, pointOfView: topCamera)
+        FieldView(scene: self.fieldScene, pointOfView: topCamera, options: options, preferredFramesPerSecond: preferredFramesPerSecond, antialiasingMode: antialiasingMode, delegate: delegate, technique: technique)
             .aspectRatio(
                 CGFloat(robot.topCamera.hFov.degrees_d) / CGFloat(robot.topCamera.vFov.degrees_d),
                 contentMode: .fit

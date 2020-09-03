@@ -59,6 +59,7 @@
 import SwiftUI
 
 import GURobots
+import SceneKit
 
 @available(macOS 11.0, *)
 public struct BottomCameraView<Robot: FieldRobot>: View where Robot: BottomCameraContainer {
@@ -67,16 +68,27 @@ public struct BottomCameraView<Robot: FieldRobot>: View where Robot: BottomCamer
     let field: Field<Robot>
     let identity: RobotIdentity
     
+    private let options: SceneView.Options
+    private let preferredFramesPerSecond: Int
+    private let antialiasingMode: SCNAntialiasingMode
+    private let delegate: SCNSceneRendererDelegate?
+    private let technique: SCNTechnique?
+    
     private let bottomCamera: FieldCamera
     
     private var robot: Robot {
         self.field.robot(forIdentity: identity)
     }
     
-    public init(fieldScene: FieldScene, field: Field<Robot>, identity: RobotIdentity) {
+    public init(fieldScene: FieldScene, field: Field<Robot>, identity: RobotIdentity, options: SceneView.Options = [], preferredFramesPerSecond: Int = 60, antialiasingMode: SCNAntialiasingMode = .multisampling4X, delegate: SCNSceneRendererDelegate? = nil, technique: SCNTechnique? = nil) {
         self.fieldScene = fieldScene
         self.field = field
         self.identity = identity
+        self.options = options
+        self.preferredFramesPerSecond = preferredFramesPerSecond
+        self.antialiasingMode = antialiasingMode
+        self.delegate = delegate
+        self.technique = technique
         self.bottomCamera = FieldCamera(
             field: field,
             perspective: .robot(side: identity.side, index: identity.playerIndex, cameraPerspective: .bottom)
@@ -85,7 +97,7 @@ public struct BottomCameraView<Robot: FieldRobot>: View where Robot: BottomCamer
     }
     
     public var body: some View {
-        FieldView(scene: self.fieldScene, pointOfView: bottomCamera)
+        FieldView(scene: self.fieldScene, pointOfView: bottomCamera, options: options, preferredFramesPerSecond: preferredFramesPerSecond, antialiasingMode: antialiasingMode, delegate: delegate, technique: technique)
             .aspectRatio(
                 CGFloat(robot.bottomCamera.hFov.degrees_d) / CGFloat(robot.bottomCamera.vFov.degrees_d),
                 contentMode: .fit
