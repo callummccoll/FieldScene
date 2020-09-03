@@ -235,16 +235,26 @@ public final class FieldScene {
             0.101,
             CGFloat(Metres_d(fieldPosition.position.x))
         )
+        
         let yaw = fieldPosition.heading.radians_d
         let translateAction = SCNAction.move(to: translateVector, duration: duration)
-        let rotateAction = SCNAction.rotateTo(
+        let rotateVector = SCNVector3(
             x: node.eulerAngles.x,
             y: CGFloat(yaw) - CGFloat.pi / 2.0,
-            z: node.eulerAngles.z,
+            z: node.eulerAngles.z
+        )
+        let rotateAction = SCNAction.rotateTo(
+            x: rotateVector.x,
+            y: rotateVector.y,
+            z: rotateVector.z,
             duration: duration
         )
-        node.runAction(translateAction)
-        node.runAction(rotateAction)
+        if node.position.x != translateVector.x || node.position.y != translateVector.y || node.position.z != translateVector.z {
+            node.runAction(translateAction)
+        }
+        if node.eulerAngles.x != rotateVector.x || node.eulerAngles.y != rotateVector.y || node.eulerAngles.z != rotateVector.z {
+            node.runAction(rotateAction)
+        }
         return
     }
     
