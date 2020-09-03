@@ -75,18 +75,34 @@ public extension SCNScene {
         if FileManager.default.fileExists(atPath: expectedBundle) {
             return package + "_" + package + ".bundle/Contents/Resources"
         }
-        guard nil != Bundle.allBundles.first(where : {
+        if nil != Bundle.allBundles.first(where : {
             return FileManager.default.fileExists(atPath: $0.bundleURL.appendingPathComponent(package + "_" + package + ".bundle", isDirectory: true).path)
-        }) else {
-            fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath }), mainBundle: \(Bundle.main.bundlePath)")
+        }) {
+            return package + "_" + package + ".bundle"
         }
-        return package + "_" + package + ".bundle"
+        if nil != Bundle.allBundles.first(where : {
+            return FileManager.default.fileExists(
+                atPath: $0.bundleURL.appendingPathComponent(package + ".framework", isDirectory: true)
+                                    .appendingPathComponent("Versions", isDirectory: true)
+                                    .appendingPathComponent("A", isDirectory: true)
+                                    .appendingPathComponent("Resources", isDirectory: true).path)
+        }) {
+            return package + ".framework/Versions/A/Resources"
+        }
+        fatalError("Unable to locate bundle in \(Bundle.allBundles.map { $0.bundlePath }), mainBundle: \(Bundle.main.bundlePath)")
     }
     
     private static func resourcesURL(ofPackage package: String) -> URL? {
         let expectedBundle = Bundle.main.bundleURL.appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true).appendingPathComponent(package + "_" + package + ".bundle", isDirectory: true).appendingPathComponent("Contents", isDirectory: true).appendingPathComponent("Resources", isDirectory: true)
         if FileManager.default.fileExists(atPath: expectedBundle.path) {
             return expectedBundle
+        }
+        let otherBundle = Bundle.main.bundleURL.appendingPathComponent(package + ".framework", isDirectory: true)
+            .appendingPathComponent("Versions", isDirectory: true)
+            .appendingPathComponent("A", isDirectory: true)
+            .appendingPathComponent("Resources", isDirectory: true)
+        if FileManager.default.fileExists(atPath: otherBundle.path) {
+            return otherBundle
         }
         return nil
     }
