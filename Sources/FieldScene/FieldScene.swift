@@ -84,6 +84,9 @@ public final class FieldScene {
     
     private var robotNode: SCNNode = SCNNode()
     
+    private var homeRobotPositions: [Int: FieldCoordinate?] = [:]
+    private var awayRobotPositions: [Int: FieldCoordinate?] = [:]
+    
     public init<Robot: FieldRobot>(field: Field<Robot>, robotModel: RobotModel = .nao) {
         self.robotModel = robotModel
         // Field
@@ -181,7 +184,7 @@ public final class FieldScene {
     }
     
     private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>, duration: TimeInterval = 0) {
-        func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode?, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
+        func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode?, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void, lastFieldPosition: (Int) -> FieldCoordinate?, assignFieldPosition: (Int, FieldCoordinate?) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
                 indexRange.forEach(remove)
@@ -201,7 +204,8 @@ public final class FieldScene {
                 }
             }
             for (index, robot) in robots.enumerated() {
-                self.updateRobotNode(get(index)!, for: robot, duration: duration)
+                self.updateRobotNode(get(index)!, for: robot, lastFieldPosition: lastFieldPosition(index), duration: duration)
+                assignFieldPosition(index, robot.fieldPosition)
             }
         }
         sync(
@@ -209,14 +213,18 @@ public final class FieldScene {
             nodeCount: homeRobotNodes.count,
             get: { homeRobotNodes[$0] },
             assign: { homeRobotNodes[$0] = $1 },
-            remove: { homeRobotNodes[$0]?.removeFromParentNode() }
+            remove: { homeRobotNodes[$0]?.removeFromParentNode() },
+            lastFieldPosition: { homeRobotPositions[$0] ?? nil },
+            assignFieldPosition: { homeRobotPositions[$0] = $1 }
         )
         sync(
             robots: field.awayRobots,
             nodeCount: awayRobotNodes.count,
             get: { awayRobotNodes[$0] },
             assign: { awayRobotNodes[$0] = $1 },
-            remove: {awayRobotNodes[$0]?.removeFromParentNode() }
+            remove: {awayRobotNodes[$0]?.removeFromParentNode() },
+            lastFieldPosition: { awayRobotPositions[$0] ?? nil },
+            assignFieldPosition: { awayRobotPositions[$0] = $1 }
         )
     }
     
@@ -226,8 +234,15 @@ public final class FieldScene {
         return node
     }
     
-    private func updateRobotNode<Robot: FieldRobot>(_ node: SCNNode, for robot: Robot, duration: TimeInterval = 0) {
+    private func updateRobotNode<Robot: FieldRobot>(_ node: SCNNode, for robot: Robot, lastFieldPosition: FieldCoordinate? = nil, duration: TimeInterval = 0) {
         guard let fieldPosition = robot.fieldPosition else {
+            node.removeFromParentNode()
+            return
+        }
+        if lastFieldPosition == nil {
+            self.scene.rootNode.addChildNode(node)
+        }
+        if let lastFieldPosition = lastFieldPosition, lastFieldPosition == robot.fieldPosition {
             return
         }
         let translateVector = SCNVector3(
