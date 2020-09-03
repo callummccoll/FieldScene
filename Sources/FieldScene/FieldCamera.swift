@@ -127,6 +127,10 @@ public final class FieldCamera {
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
     
+    deinit {
+        self.cameraNode.removeFromParentNode()
+    }
+    
     public func update<Robot: FieldRobot>(perspective: Perspective<Robot>, in field: Field<Robot>) {
         self.updateCameraNode(self.cameraNode, camera: self.camera, to: perspective, in: field)
     }
