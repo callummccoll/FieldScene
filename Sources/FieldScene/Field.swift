@@ -79,6 +79,15 @@ public struct Field<Robot: FieldRobot> {
         self.awayRobots = awayRobots
         self.lightIntensity = lightIntensity
     }
+    
+    public func robot(forIdentity identity: RobotIdentity) -> Robot {
+        switch identity.side {
+        case .home:
+            return self.homeRobots[identity.playerIndex]
+        case .away:
+            return self.awayRobots[identity.playerIndex]
+        }
+    }
 
     
 }

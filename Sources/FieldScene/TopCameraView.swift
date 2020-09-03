@@ -61,13 +61,17 @@ import SwiftUI
 import GURobots
 
 @available(macOS 11.0, *)
-public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraContainer, Robot: BottomCameraContainer {
+public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraContainer {
     
     let fieldScene: FieldScene
     let field: Field<Robot>
     let identity: RobotIdentity
     
     private let topCamera: FieldCamera
+    
+    private var robot: Robot {
+        self.field.robot(forIdentity: identity)
+    }
     
     public init(fieldScene: FieldScene, field: Field<Robot>, identity: RobotIdentity) {
         self.fieldScene = fieldScene
@@ -82,5 +86,9 @@ public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraConta
     
     public var body: some View {
         FieldView(scene: self.fieldScene, pointOfView: topCamera)
+            .aspectRatio(
+                CGFloat(robot.topCamera.hFov.degrees_d) / CGFloat(robot.topCamera.vFov.degrees_d),
+                contentMode: .fit
+            )
     }
 }
