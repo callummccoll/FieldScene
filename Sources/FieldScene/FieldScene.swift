@@ -149,31 +149,38 @@ public final class FieldScene {
         return image
     }
     
-    public func update<Robot: FieldRobot>(from field: Field<Robot>) {
-        self.syncRobotNodes(to: field)
-        self.updateBall(from: field.ball)
+    public func update<Robot: FieldRobot>(from field: Field<Robot>, duration: TimeInterval = 0) {
+        self.syncRobotNodes(to: field, duration: duration)
+        self.updateBall(from: field.ball, duration: duration)
     }
     
-    private func updateBall(from ballPosition: BallPosition?) {
+    private func updateBall(from ballPosition: BallPosition?, duration: TimeInterval = 0) {
         guard let ballPosition = ballPosition else {
             self.ballNode.removeFromParentNode()
             return
         }
-        self.ballNode.position.x = 0.0
-        self.ballNode.position.y = 0.0
-        self.ballNode.position.z = 0.0
-        self.ballNode.eulerAngles.z = CGFloat(ballPosition.orientation.pitch.radians_d)
-        self.ballNode.eulerAngles.y = CGFloat(ballPosition.orientation.yaw.radians_d)
-        self.ballNode.eulerAngles.x = CGFloat(ballPosition.orientation.roll.radians_d)
-        self.ballNode.position.x = CGFloat(Metres_d(ballPosition.position.y))
-        self.ballNode.position.z = CGFloat(Metres_d(ballPosition.position.x))
-        self.ballNode.position.y = 0.144
         if self.ballNode.parent == nil {
             self.scene.rootNode.addChildNode(self.ballNode)
         }
+        let translateAction = SCNAction.move(
+            to: SCNVector3(
+                CGFloat(Metres_d(ballPosition.position.y)),
+                0.144,
+                CGFloat(Metres_d(ballPosition.position.x))
+            ),
+            duration: duration
+        )
+        let rotateAction = SCNAction.rotateTo(
+            x: CGFloat(ballPosition.orientation.roll.radians_d),
+            y: CGFloat(ballPosition.orientation.yaw.radians_d),
+            z: CGFloat(ballPosition.orientation.pitch.radians_d),
+            duration: duration
+        )
+        self.ballNode.runAction(translateAction)
+        self.ballNode.runAction(rotateAction)
     }
     
-    private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>) {
+    private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>, duration: TimeInterval = 0) {
         func sync(robots: [Robot], nodeCount: Int, get: (Int) -> SCNNode?, assign: (Int, SCNNode) -> Void, remove: (Int) -> Void) {
             if robots.count < nodeCount {
                 let indexRange = robots.count..<nodeCount
@@ -194,7 +201,7 @@ public final class FieldScene {
                 }
             }
             for (index, robot) in robots.enumerated() {
-                self.updateRobotNode(get(index)!, for: robot)
+                self.updateRobotNode(get(index)!, for: robot, duration: duration)
             }
         }
         sync(
@@ -219,15 +226,25 @@ public final class FieldScene {
         return node
     }
     
-    private func updateRobotNode<Robot: FieldRobot>(_ node: SCNNode, for robot: Robot) {
+    private func updateRobotNode<Robot: FieldRobot>(_ node: SCNNode, for robot: Robot, duration: TimeInterval = 0) {
         guard let fieldPosition = robot.fieldPosition else {
             return
         }
+        let translateVector = SCNVector3(
+            CGFloat(Metres_d(fieldPosition.position.y)),
+            0.101,
+            CGFloat(Metres_d(fieldPosition.position.x))
+        )
         let yaw = fieldPosition.heading.radians_d
-        node.position.z = CGFloat(Metres_d(fieldPosition.position.x))
-        node.position.x = CGFloat(Metres_d(fieldPosition.position.y))
-        node.position.y = 0.101
-        node.eulerAngles.y = CGFloat(yaw) - CGFloat.pi / 2.0
+        let translateAction = SCNAction.move(to: translateVector, duration: duration)
+        let rotateAction = SCNAction.rotateTo(
+            x: node.eulerAngles.x,
+            y: CGFloat(yaw) - CGFloat.pi / 2.0,
+            z: node.eulerAngles.z,
+            duration: duration
+        )
+        node.runAction(translateAction)
+        node.runAction(rotateAction)
         return
     }
     
