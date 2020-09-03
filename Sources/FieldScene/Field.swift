@@ -88,6 +88,15 @@ public struct Field<Robot: FieldRobot> {
             return self.awayRobots[identity.playerIndex]
         }
     }
+    
+    public func identities(forSide side: FieldSide) -> [RobotIdentity] {
+        switch side {
+        case .home:
+            return self.homeRobots.enumerated().map { RobotIdentity(side: .home, playerIndex: $0.offset) }
+        case .away:
+            return self.awayRobots.enumerated().map { RobotIdentity(side: .away, playerIndex: $0.offset) }
+        }
+    }
 
     
 }
