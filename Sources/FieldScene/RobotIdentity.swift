@@ -56,9 +56,7 @@
  *
  */
 
-import FieldScene
-
-public struct RobotIdentity {
+public struct RobotIdentity: Hashable, Codable {
     
     public var side: FieldSide
     
