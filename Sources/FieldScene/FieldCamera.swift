@@ -144,7 +144,7 @@ public final class FieldCamera {
             let tempCamera = SCNCamera()
             camera.xFov = tempCamera.xFov
             camera.yFov = tempCamera.yFov
-            camera.zNear = 0.1
+            camera.zNear = 0.01
         }
         let robot: Robot
         let cameraPivot: CameraPivot
