@@ -87,6 +87,8 @@ public final class FieldScene {
     private var homeRobotPositions: [Int: FieldCoordinate?] = [:]
     private var awayRobotPositions: [Int: FieldCoordinate?] = [:]
     
+    private var lastBallPosition: BallPosition? = nil
+    
     public init<Robot: FieldRobot>(field: Field<Robot>, robotModel: RobotModel = .nao) {
         self.robotModel = robotModel
         // Field
@@ -128,17 +130,16 @@ public final class FieldScene {
         for (index, homeRobot) in field.homeRobots.enumerated() {
             let robotNode = self.createRobotNode(for: homeRobot)
             homeRobotNodes[index] = robotNode
-            scene.rootNode.addChildNode(robotNode)
+            homeRobotPositions[index] = homeRobot.fieldPosition
         }
         for (index, awayRobot) in field.awayRobots.enumerated() {
             let robotNode = self.createRobotNode(for: awayRobot)
             awayRobotNodes[index] = robotNode
-            scene.rootNode.addChildNode(robotNode)
+            awayRobotPositions[index] = awayRobot.fieldPosition
         }
         // Ball
         self.ballNode = SCNNode.load("ball", inAsset: "field", inPackage: "FieldScene")
         self.updateBall(from: field.ball)
-        scene.rootNode.addChildNode(self.ballNode)
     }
     
     public func renderImage<Robot: FieldRobot>(of field: Field<Robot>, inCamera camera: FieldCamera, resWidth: Pixels_u = 1920, resHeight: Pixels_u = 1080) -> NSImage {
@@ -159,28 +160,44 @@ public final class FieldScene {
     
     private func updateBall(from ballPosition: BallPosition?, duration: TimeInterval = 0) {
         guard let ballPosition = ballPosition else {
-            self.ballNode.removeFromParentNode()
+            if self.ballNode.parent != nil {
+                self.ballNode.removeFromParentNode()
+            }
             return
         }
         if self.ballNode.parent == nil {
             self.scene.rootNode.addChildNode(self.ballNode)
         }
-        let translateAction = SCNAction.move(
-            to: SCNVector3(
-                CGFloat(Metres_d(ballPosition.position.y)),
-                0.144,
-                CGFloat(Metres_d(ballPosition.position.x))
-            ),
-            duration: duration
+        if let lastBallPosition = self.lastBallPosition, lastBallPosition == ballPosition {
+            return
+        }
+        if self.ballNode.hasActions {
+            self.ballNode.removeAllActions()
+        }
+        self.lastBallPosition = ballPosition
+        let translateVector = SCNVector3(
+            CGFloat(Metres_d(ballPosition.position.y)),
+            0.144,
+            CGFloat(Metres_d(ballPosition.position.x))
         )
-        let rotateAction = SCNAction.rotateTo(
-            x: CGFloat(ballPosition.orientation.roll.radians_d),
-            y: CGFloat(ballPosition.orientation.yaw.radians_d),
-            z: CGFloat(ballPosition.orientation.pitch.radians_d),
-            duration: duration
+        let rotateVector = SCNVector3(
+            CGFloat(ballPosition.orientation.roll.radians_d),
+            CGFloat(ballPosition.orientation.yaw.radians_d),
+            CGFloat(ballPosition.orientation.pitch.radians_d)
         )
-        self.ballNode.runAction(translateAction)
-        self.ballNode.runAction(rotateAction)
+        if ballNode.position.x != translateVector.x || ballNode.position.y != translateVector.y || ballNode.position.z != translateVector.z {
+            let translateAction = SCNAction.move(to: translateVector, duration: duration)
+            ballNode.runAction(translateAction)
+        }
+        if ballNode.eulerAngles.x != rotateVector.x || ballNode.eulerAngles.y != rotateVector.y || ballNode.eulerAngles.z != rotateVector.z {
+            let rotateAction = SCNAction.rotateTo(
+                x: rotateVector.x,
+                y: rotateVector.y,
+                z: rotateVector.z,
+                duration: duration
+            )
+            ballNode.runAction(rotateAction)
+        }
     }
     
     private func syncRobotNodes<Robot: FieldRobot>(to field: Field<Robot>, duration: TimeInterval = 0) {
@@ -236,41 +253,44 @@ public final class FieldScene {
     
     private func updateRobotNode<Robot: FieldRobot>(_ node: SCNNode, for robot: Robot, lastFieldPosition: FieldCoordinate? = nil, duration: TimeInterval = 0) {
         guard let fieldPosition = robot.fieldPosition else {
-            node.removeFromParentNode()
+            if node.parent != nil {
+                node.removeFromParentNode()
+            }
             return
         }
-        if lastFieldPosition == nil {
+        if node.parent == nil {
             self.scene.rootNode.addChildNode(node)
         }
-        if let lastFieldPosition = lastFieldPosition, lastFieldPosition == robot.fieldPosition {
+        if let lastFieldPosition = lastFieldPosition, lastFieldPosition == fieldPosition {
             return
+        }
+        if node.hasActions {
+            node.removeAllActions()
         }
         let translateVector = SCNVector3(
             CGFloat(Metres_d(fieldPosition.position.y)),
             0.101,
             CGFloat(Metres_d(fieldPosition.position.x))
         )
-        
         let yaw = fieldPosition.heading.radians_d
-        let translateAction = SCNAction.move(to: translateVector, duration: duration)
         let rotateVector = SCNVector3(
             x: node.eulerAngles.x,
             y: CGFloat(yaw) - CGFloat.pi / 2.0,
             z: node.eulerAngles.z
         )
-        let rotateAction = SCNAction.rotateTo(
-            x: rotateVector.x,
-            y: rotateVector.y,
-            z: rotateVector.z,
-            duration: duration
-        )
         if node.position.x != translateVector.x || node.position.y != translateVector.y || node.position.z != translateVector.z {
+            let translateAction = SCNAction.move(to: translateVector, duration: duration)
             node.runAction(translateAction)
         }
         if node.eulerAngles.x != rotateVector.x || node.eulerAngles.y != rotateVector.y || node.eulerAngles.z != rotateVector.z {
+            let rotateAction = SCNAction.rotateTo(
+                x: rotateVector.x,
+                y: rotateVector.y,
+                z: rotateVector.z,
+                duration: duration
+            )
             node.runAction(rotateAction)
         }
-        return
     }
     
 }
