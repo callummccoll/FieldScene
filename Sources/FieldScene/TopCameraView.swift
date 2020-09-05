@@ -100,7 +100,7 @@ public struct TopCameraView<Robot: FieldRobot>: View where Robot: TopCameraConta
         FieldView(scene: self.fieldScene, pointOfView: topCamera, options: options, preferredFramesPerSecond: preferredFramesPerSecond, antialiasingMode: antialiasingMode, delegate: delegate, technique: technique)
             .aspectRatio(
                 CGFloat(robot.topCamera.hFov.degrees_d) / CGFloat(robot.topCamera.vFov.degrees_d),
-                contentMode: .fit
+                contentMode: .fill
             )
     }
 }

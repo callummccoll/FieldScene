@@ -91,6 +91,6 @@ public struct SkyView<Robot: FieldRobot>: View {
     }
     
     public var body: some View {
-        FieldView(scene: self.fieldScene, pointOfView: skyCamera, options: options, preferredFramesPerSecond: preferredFramesPerSecond, antialiasingMode: antialiasingMode, delegate: delegate, technique: technique)
+        FieldView(scene: self.fieldScene, pointOfView: skyCamera, options: options, preferredFramesPerSecond: preferredFramesPerSecond, antialiasingMode: antialiasingMode, delegate: delegate, technique: technique).aspectRatio(contentMode: .fill)
     }
 }

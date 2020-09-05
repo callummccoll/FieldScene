@@ -100,7 +100,7 @@ public struct BottomCameraView<Robot: FieldRobot>: View where Robot: BottomCamer
         FieldView(scene: self.fieldScene, pointOfView: bottomCamera, options: options, preferredFramesPerSecond: preferredFramesPerSecond, antialiasingMode: antialiasingMode, delegate: delegate, technique: technique)
             .aspectRatio(
                 CGFloat(robot.bottomCamera.hFov.degrees_d) / CGFloat(robot.bottomCamera.vFov.degrees_d),
-                contentMode: .fit
+                contentMode: .fill
             )
     }
 }
